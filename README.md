@@ -107,8 +107,8 @@ hecate-agents/
 Reference these docs in your workspace `CLAUDE.md`:
 
 ```bash
-cat ~/work/github.com/hecate-social/hecate-agents/philosophy/DDD.md
-cat ~/work/github.com/hecate-social/hecate-agents/skills/ANTIPATTERNS.md
+cat ~/work/codeberg.org/hecate-social/hecate-agents/philosophy/DDD.md
+cat ~/work/codeberg.org/hecate-social/hecate-agents/skills/ANTIPATTERNS.md
 ```
 
 ### For Hecate Martha (AI Agent)
