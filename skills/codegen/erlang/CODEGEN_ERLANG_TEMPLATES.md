@@ -7,6 +7,57 @@ _Complete module templates for generating Division Architecture (Cartwheel) code
 **Related files:**
 - [CODEGEN_ERLANG_CHECKLISTS.md](CODEGEN_ERLANG_CHECKLISTS.md) — Generation checklists
 - [CODEGEN_ERLANG_NAMING.md](CODEGEN_ERLANG_NAMING.md) — Naming conventions
+- [ANTIPATTERNS_EVENT_SOURCING.md](../../ANTIPATTERNS_EVENT_SOURCING.md) — canonical reckon-db + evoq wiring (MANDATORY for CMD/PRJ)
+
+---
+
+## Service Shell (umbrella root)
+
+For a new `hecate-<svc>` daemon, **DON'T hand-write the shell**.
+Use the canonical scaffolder in `hecate-om`:
+
+```bash
+cd ~/work/codeberg.org/hecate-services/hecate-om
+./scripts/scaffold-service.sh \
+    ~/work/codeberg.org/hecate-services/hecate-<svc> \
+    hecate-<svc> \
+    "One-line description of <svc>"
+```
+
+This renders, from `hecate-om/templates/`:
+
+| File | Purpose |
+|------|---------|
+| `Containerfile` | Multi-stage OTP build image |
+| `quadlet/hecate-<svc>.container` | Podman Quadlet unit |
+| `manifest.json` | hecate-realm capability declaration |
+| `.github/workflows/build-push.yml` | ghcr.io publish on push to main |
+| `src/<app>_app.erl` | OTP entry — one line: `hecate_om:boot(<service_module>)` |
+| `src/<app>_service.erl` | hecate_om_service callbacks (incl. optional `store_id/0` + `data_dir/0`) |
+| `config/sys.config.src` | Canonical reckon_db + evoq + hecate_om blocks |
+
+### What you still write by hand
+
+- `rebar.config` (deps + relx releases — copy from a sibling service)
+- `src/<app>.app.src`
+- `src/<app>_sup.erl` (top-level sup; if the service has no
+  domain-specific children, just leave the child list empty)
+- The `apps/<domain>/` CMD/PRJ/QRY apps themselves (see the
+  CMD/PRJ/QRY templates below)
+
+### Why `_app.erl` is one line
+
+`hecate_om:boot/1` does everything: persistent-term registration of
+the service module, capability advertisement, /health wiring, and
+(when the service exports `store_id/0` + `data_dir/0`)
+`reckon_db_sup:start_store/1` + `evoq_store_subscription:start_link/1`.
+The wiring is in `hecate_om_store`, shipped in hecate_om ≥ 0.3.0.
+
+If the service is **producer-only** (no event store of its own —
+e.g. a simulator, a metrics exporter), delete the two optional
+callbacks from `_service.erl` AND the `{reckon_db, [...]}` /
+`{evoq, [...]}` blocks from `sys.config.src`. The scaffolder
+includes them by default since CMD/PRJ is the common case.
 
 ---
 
