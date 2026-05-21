@@ -243,6 +243,16 @@ Config = #store_config{
 
 Without both of these, evoq will crash on first dispatch.
 
+**Alternative (declarative) — list stores in the `reckon_db` app env; `reckon_db_sup` starts them at boot, no explicit `start_store/1` call:**
+
+```erlang
+{reckon_db, [
+    {stores, [{my_domain_store, [{mode, single}, {data_dir, "/path/to/store"}]}]}
+]}.
+```
+
+⚠️ The default `data_dir` is **`/var/lib/reckon_db/<store_id>`** — not writable in dev/test. Always set an explicit, writable `data_dir` (in prod, the persistent volume), or the store dies at boot with `{badmatch, {error, enoent}}` from `reckon_db_store:init/1`.
+
 ---
 
 ## 🔥 Binary Keys in Event `to_map/1` Functions
@@ -591,5 +601,77 @@ If you ever write this comment:
 > **Events are facts. Facts must be self-contained.**
 > **A process manager that reads from a read model is a process manager that will fail.**
 > **If your event is too poor, your event is wrong. Fix the event.**
+
+---
+
+## 🔥 Aggregate `apply/2` Sees Two Event Shapes (and `execute/2` Must Not Pre-Wrap `data`)
+
+**Date:** 2026-05-21
+**Origin:** reckon-portal blog Division (dogfooding ReckonDB). Verified against **evoq 1.15.0** — the `evoq_aggregate` reference in `codegen/erlang/EVOQ_BEHAVIOURS.md` is dated to ~1.4, and this corner behaves as below in 1.15.
+
+### The Antipattern
+
+Returning events from `execute/2` already wrapped in a `data` key, AND writing `apply/2` to read `maps:get(data, Event)` unconditionally.
+
+```erlang
+%% WRONG — execute pre-wraps under `data`
+execute(_S, #{command_type := publish_post} = P) ->
+    {ok, [#{event_type => <<"post_published_v1">>,
+            data => #{title => maps:get(title, P)}}]}.   %% the trap
+
+%% WRONG — apply assumes a `data` key is always present
+apply(S, #{event_type := <<"post_published_v1">>, data := D}) -> ...
+```
+
+### Why It's Wrong
+
+`evoq_aggregate:append_events/5` builds the stored envelope itself:
+
+```erlang
+Data = maps:without([event_type], Event),   %% everything-but-event_type IS the data
+Wrapped = #{event_type => EventType, data => Data, metadata => BaseMeta}.
+```
+
+So if `execute/2` returns `#{event_type, data => #{...}}`, the stored data becomes `#{data => #{...}}` — **double-nested**. The projection reads `data.data.title` and finds nothing. Silent, like every envelope demon.
+
+Worse, there are **two delivery shapes for the same `apply/2`**:
+
+| When | What `apply/2` receives |
+|------|--------------------------|
+| In-memory, right after `execute/2` | the **raw** `execute` output — business fields **inline**, NO `data` key (evoq folds the unwrapped events into state *before* appending) |
+| On reload / replay from the store | the **wrapped** envelope — business fields under `data` |
+
+An `apply/2` that matches `data := D` works on reload but silently no-ops in-memory (falls through to the catch-all), so status flags never get set on the live aggregate — and the bug only shows on the **second** command, never the first.
+
+### The Fix
+
+1. **`execute/2` returns business fields INLINE** (atom keys — see "Binary Keys" above) alongside `event_type`; let evoq do the wrapping:
+
+```erlang
+execute(_S, #{command_type := publish_post} = P) ->
+    {ok, [#{event_type => <<"post_published_v1">>,
+            title => maps:get(title, P),
+            body  => maps:get(body, P)}]}.
+```
+
+2. **`apply/2` normalises both shapes** (the same `maps:get(data, Event, Event)` idiom evoq's own handlers use):
+
+```erlang
+apply(State, #{event_type := Type} = Event) ->
+    apply_event(Type, event_data(Event), State).
+
+event_data(#{data := D}) when is_map(D) -> D;     %% reloaded envelope
+event_data(Event) ->                              %% raw in-memory event
+    maps:without([event_type, version, metadata, event_id,
+                  stream_id, timestamp, epoch_us, tags], Event).
+```
+
+### The Rule
+
+> **`execute/2` emits inline fields; evoq owns the `data` wrapper.**
+> **`apply/2` reads fields tolerantly — inline in-memory, under `data` on reload.**
+> **Test the SECOND command, not just the first** — the in-memory fold only bites on replay-of-self (publish → "already published").
+
+---
 
 *We burned these demons so you don't have to. Keep the fire going.* 🔥🗝️🔥
