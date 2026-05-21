@@ -313,4 +313,50 @@ Consumers need `debug_info` in beam files to run dialyzer. Without it, dialyzer 
 
 ---
 
+## 🔥 Containerized reckon_db With a Dynamic BEAM Node Name
+
+**Date:** 2026-05-21
+**Origin:** reckon-portal blog Division on reckon-db.org — brief 502 outage on the second redeploy
+
+### The Antipattern
+
+Running a containerized app that embeds **reckon_db** (Ra/Khepri) with the default release node name, `<app>@<container-id>`.
+
+### Why It's Wrong
+
+Ra persists the node name into its on-disk cluster state under the store's `data_dir`. The container hostname (hence the node name) changes on **every** `docker run`/recreate. So on the first boot everything works; on the next redeploy Ra reads its persisted state, sees a "leader" on a node that no longer exists, and waits for it forever:
+
+```
+[warning] Retry attempt 1 for store :blog_store after 106ms: :timeout
+[warning] Retry attempt 2 ... :timeout      %% backs off to 30s, never recovers
+```
+
+The store never serves → the app hangs **unhealthy** → 502. With a persistent volume this bites on the *second* deploy (or the next watchtower auto-update), not the first.
+
+### The Fix
+
+Pin a stable node name in the container env:
+
+```yaml
+# docker-compose.yml — on the app service
+RELEASE_DISTRIBUTION: name
+RELEASE_NODE: reckon_portal@127.0.0.1   # any fixed name; IP avoids DNS
+```
+
+Persisted Ra state then stays valid across recreates: `1 record(s) recovered`, leader re-elected on the same node, healthy in ~10s.
+
+### Why a Fresh-Volume Smoke Misses It
+
+A container smoke that uses a **fresh** volume each run boots clean every time — there is no persisted node name to mismatch. **You must test the restart path:** `docker compose up -d --force-recreate` against an *existing* volume, and confirm it stays healthy. First-boot green is not enough for stateful stores.
+
+### Recovery If Already Broken
+
+The dead node name is baked into the volume. Pin the node name AND wipe the stale volume once: `docker compose rm -sf <svc>` (frees the volume), `docker volume rm <project>_<vol>`, then recreate. Safe only if there's no real data yet.
+
+### The Rule
+
+> **Stateful BEAM stores need a stable node identity.** If Ra/Khepri (or Mnesia) data outlives the container, the node name must too.
+
+---
+
 *We burned these demons so you don't have to. Keep the fire going.* 🔥🗝️🔥
