@@ -209,8 +209,8 @@ This bypasses the domain flow:
 
 1. **Parent discovers child**: `POST /api/ventures/:venture_id/divisions/discover`
 2. **Event emitted**: `division_discovered_v1` to pg (internal) + mesh (external)
-3. **Listener receives**: `subscribe_to_division_discovered` in design_division
-4. **Policy decides**: `on_division_discovered_maybe_initiate_division`
+3. **PM sibling slice in target domain receives**: `on_division_discovered_initiate_division/` in `design_division` (gen_server `pg:join`s source scope in `init/1`)
+4. **PM dispatches command**: `initiate_division_v1`
 5. **Child initiated**: `division_initiated_v1` event created
 
 ### When to Use Which

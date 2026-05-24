@@ -127,10 +127,9 @@ init([]) ->
           start => {{event}_to_mesh, start_link, []},
           type => worker}
 
-        %% Optional: Policy/PM workers
-        % #{id => on_{trigger_event}_maybe_{command},
-        %   start => {on_{trigger_event}_maybe_{command}, start_link, []},
-        %   type => worker}
+        %% NOTE: PMs are NOT children of desk sups.
+        %% Each PM lives in its own sibling slice `on_{src_event}_{action}_{target}/`
+        %% with its own supervisor, started by the domain sup. See Demon 18.
     ],
     {ok, {#{strategy => one_for_one, intensity => 5, period => 10}, Children}}.
 ```
@@ -451,10 +450,35 @@ event_to_fact(EventData) ->
     }.
 ```
 
-### on\_{trigger_event}\_maybe\_{command}.erl (Policy/Process Manager)
+### Process Manager (Sibling Slice) — `on_{src_event}_{action}_{target}/`
+
+A PM is a sibling slice of desks in the target CMD app. It has its own directory, supervisor, and gen_server. Generate **both files** below and start the supervisor from the **domain sup** (peer to desk sups), not from a desk sup.
+
+#### `on_{src_event}_{action}_{target}_sup.erl`
 
 ```erlang
--module(on_{trigger_event}_maybe_{command}).
+-module(on_{src_event}_{action}_{target}_sup).
+-behaviour(supervisor).
+
+-export([start_link/0, init/1]).
+
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+
+init([]) ->
+    Children = [
+        #{id => on_{src_event}_{action}_{target},
+          start => {on_{src_event}_{action}_{target}, start_link, []},
+          restart => permanent,
+          type => worker}
+    ],
+    {ok, {#{strategy => one_for_one, intensity => 10, period => 10}, Children}}.
+```
+
+#### `on_{src_event}_{action}_{target}.erl`
+
+```erlang
+-module(on_{src_event}_{action}_{target}).
 -behaviour(gen_server).
 
 -export([start_link/0]).

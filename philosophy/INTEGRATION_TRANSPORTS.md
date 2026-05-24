@@ -224,37 +224,47 @@ on_venture_initiated_v1_from_pg_project_to_sqlite_ventures.erl
 
 ## Listener Placement Rule
 
-> **If a listener's sole purpose is to trigger desk X, it lives IN desk X, supervised by desk X's supervisor.**
+> **A cross-domain listener / PM is its own sibling slice in the target CMD app.** Own directory, own supervisor, own gen_server. Named `on_{source_event}_{action}_{target}/`.
 
-Listeners are NOT centralized. There is no `listeners/` directory. Each listener belongs to the desk it triggers.
+Listeners are NOT centralized — no `listeners/` directory, no `*_listeners_sup`. They are also NOT nested inside the desk they trigger. They sit as siblings of desks under the domain supervisor so the `on_*` directories scream which external events the domain reacts to when you `ls src/`.
+
+> **Decision history:** Earlier guidance (2026-02-08) placed listeners INSIDE the desk they trigger. That was reversed 2026-03-12 / reinforced 2026-05-24 — see [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks) and [PROCESS_MANAGERS.md Location Rule](PROCESS_MANAGERS.md#location-rule).
 
 ---
 
-## CMD Desk Structure
+## CMD Slice Structure
+
+The target domain's CMD app contains two kinds of slices:
 
 ```
 apps/design_division/src/
-└── initiate_division/
-    ├── initiate_division_desk_sup.erl
-    ├── on_division_discovered_v1_from_pg_maybe_initiate_division.erl
-    ├── initiate_division_v1.erl
-    ├── division_initiated_v1.erl
-    ├── division_initiated_v1_to_pg.erl
-    └── maybe_initiate_division.erl
+├── initiate_division/                                          # desk slice
+│   ├── initiate_division_desk_sup.erl
+│   ├── initiate_division_v1.erl
+│   ├── division_initiated_v1.erl
+│   ├── division_initiated_v1_to_pg.erl
+│   ├── maybe_initiate_division.erl
+│   └── initiate_division_api.erl
+│
+└── on_division_discovered_initiate_division/                   # PM sibling slice
+    ├── on_division_discovered_initiate_division_sup.erl
+    └── on_division_discovered_initiate_division.erl
 ```
 
-**Supervision:**
+**PM supervision:**
 ```erlang
-%% initiate_division_desk_sup.erl
+%% on_division_discovered_initiate_division_sup.erl
 init([]) ->
     Children = [
-        #{id => pg_listener,
-          start => {on_division_discovered_v1_from_pg_maybe_initiate_division, start_link, []},
+        #{id => on_division_discovered_initiate_division,
+          start => {on_division_discovered_initiate_division, start_link, []},
           restart => permanent,
           type => worker}
     ],
-    {ok, {#{strategy => one_for_one}, Children}}.
+    {ok, {#{strategy => one_for_one, intensity => 10, period => 10}, Children}}.
 ```
+
+The domain supervisor starts both the desk sup and each PM slice sup.
 
 ---
 
@@ -291,11 +301,15 @@ query_ventures_sup (domain supervisor)
 
 ```
 design_division_sup (domain supervisor)
+├── design_division_store (ReckonDB store)
 ├── initiate_division_desk_sup (desk supervisor)
-│   └── on_division_discovered_v1_from_pg_maybe_initiate_division (worker)
+│   └── initiate_division workers
 ├── complete_division_desk_sup (desk supervisor)
-│   └── on_all_desks_implemented_from_pg_maybe_complete_division (worker)
-└── design_division_store (ReckonDB store)
+│   └── complete_division workers
+├── on_division_discovered_initiate_division_sup (PM slice supervisor)
+│   └── on_division_discovered_initiate_division (gen_server: pg + dispatch)
+└── on_all_desks_implemented_complete_division_sup (PM slice supervisor)
+    └── on_all_desks_implemented_complete_division (gen_server: pg + dispatch)
 ```
 
 ---
@@ -426,11 +440,12 @@ handle_cast(_Msg, State) -> {noreply, State}.
 
 | Anti-Pattern | Why It's Wrong | Correct Approach |
 |--------------|----------------|------------------|
-| `src/listeners/` directory | Horizontal grouping by technical concern | Listeners live in their desk |
-| `*_listeners_sup.erl` | Central supervisor for all listeners | Each desk supervises its own listener |
+| `src/listeners/` directory | Horizontal grouping by technical concern | One PM = one sibling slice named `on_*/` |
+| `*_listeners_sup.erl` | Central supervisor for all listeners | Each PM slice owns its own supervisor |
+| PM nested inside the desk it triggers | Hides cross-domain integration points from `ls src/` | PM as sibling slice (Demon 18) |
 | mesh for intra-daemon | Massive overhead, wrong tool | Use pg |
 | pg for cross-daemon | Doesn't work across network | Use mesh |
-| Listener without a desk | Orphan code, unclear ownership | Every listener belongs to a desk |
+| Anonymous listener without `on_*` naming | Unclear purpose; not discoverable | Every PM names what it reacts to AND what it does |
 | SSE streaming to frontends | Complexity for little benefit | Use polling or WebSocket (future) |
 
 ---
@@ -441,7 +456,8 @@ handle_cast(_Msg, State) -> {noreply, State}.
 |------|----------|
 | 2026-02-08 | Use `pg` for internal integration (intra-daemon) |
 | 2026-02-08 | Use `mesh` for external integration (WAN/inter-daemon) |
-| 2026-02-08 | Listeners live in the desk they trigger |
+| 2026-02-08 | ~~Listeners live in the desk they trigger~~ (REVERSED 2026-03-12 — see entry below) |
+| 2026-03-12 | PMs / cross-domain listeners are sibling slices in the target CMD app (own slice dir, own sup). Reversed 2026-02-08 decision. Rationale: `on_*` directories provide filesystem-level discoverability of integration points; PMs are cross-slice by nature. Reinforced 2026-05-24. |
 | 2026-02-08 | Naming: `on_{event}_from_{transport}_maybe_{command}.erl` |
 | 2026-02-08 | Naming: `on_{event}_from_{transport}_project_to_{storage}_{target}.erl` |
 | 2026-02-08 | PRJ desk directory: `{event}_to_{target}/` |

@@ -2,6 +2,8 @@
 
 *Canonical example: FACTS vs EVENTS, Emitters and Listeners*
 
+> **Layout note (2026-05-24):** This example places the listener INSIDE the desk it triggers (`initiate_division/subscribe_to_division_discovered.erl`). That layout is **superseded**. Current canon: listeners / PMs are **sibling slices** at the top of the target CMD app's `src/`, named `on_{src_event}_{action}_{target}/`, each with its own `_sup.erl` + gen_server. See [PROCESS_MANAGERS.md Location Rule](../philosophy/PROCESS_MANAGERS.md#location-rule) and [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks). The mesh subscribe / emit code itself is still correct — only the directory placement and supervision wiring change.
+
 ---
 
 ## The Pattern

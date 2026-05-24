@@ -13,7 +13,7 @@
 | 3 | Incomplete Desks / Flat Workers | Missing desk supervisors and components | 2026-02-04 |
 | 4 | Missing or Wrong "Birth" Event | Must use `{agg}_initiated_v1` | 2026-02-08 |
 | 5 | Auto-Creating Child Aggregates | Parent IDENTIFIES, child INITIATES | 2026-02-08 |
-| 6 | Listeners as Separate Desks | Listener for desk X belongs IN desk X | 2026-02-08 |
+| 6 | ~~Listeners as Separate Desks~~ (REVERSED 2026-05-24 → see Demon 18) | PMs/listeners ARE their own slices; this demon is reversed | 2026-02-08 |
 | 7 | Using Mesh for Internal Integration | Use pg internally, mesh for WAN only | 2026-02-08 |
 | 8 | Centralized Listener Supervisors | No central supervisor for all listeners | 2026-02-08 |
 | 9 | Direct Creation Endpoints for Child Aggregates | Children created through parents only | 2026-02-09 |
@@ -25,7 +25,7 @@
 | 15 | Consumer-Generated Command IDs | Framework owns command_id generation | 2026-02-11 |
 | 16 | Parameterized Phase Lifecycle | Generic `start_phase/pause_phase` hides intent | 2026-02-12 |
 | 17 | CRUD Verbs in Event-Sourced Commands | "update" is the U in CRUD | 2026-02-12 |
-| 18 | Process Managers as Separate Slices | PMs are policies inside the target desk | 2026-02-12 |
+| 18 | Process Managers Inside Desks (reversed) | PMs are sibling slices in target CMD app, NOT nested inside desks | 2026-02-12 (rev 2026-03-12) |
 | 19 | esqlite3 Returns Lists, Not Tuples | `row_to_map({A,B})` silently fails — use `[A,B]` | 2026-02-12 |
 | 20 | Eager Default in `maps:get/3` | `maps:get(k, M, f())` evaluates `f()` even when key exists | 2026-02-12 |
 | 21 | esqlite3 Argument Order (Db First) | `esqlite3:exec(Db, SQL)` not `exec(SQL, Db)` | 2026-02-12 |

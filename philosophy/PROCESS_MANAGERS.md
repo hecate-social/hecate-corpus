@@ -129,60 +129,72 @@ on_{source_event}_{action}_{target}
 
 ## Location Rule
 
-**Process managers live in the TARGET domain** (the domain receiving the command).
+**Process managers live in the TARGET domain as SIBLING SLICES**, never nested inside the target desk's directory.
 
 ```
-design_division/src/              # TARGET domain
-└── initiate_division/            # Desk for this operation
-    ├── initiate_division_v1.erl
-    ├── division_initiated_v1.erl
-    ├── maybe_initiate_division.erl
-    │
-    │ # Process manager lives HERE (in target desk)
-    ├── initiate_division_desk_sup.erl
-    ├── subscribe_to_division_discovered.erl          # Listener
-    └── on_division_discovered_maybe_initiate_division.erl  # PM
+design_division/src/                                    # TARGET domain
+├── initiate_division/                                  # The desk that handles the command
+│   ├── initiate_division_v1.erl
+│   ├── division_initiated_v1.erl
+│   ├── maybe_initiate_division.erl
+│   └── initiate_division_api.erl
+│
+└── on_division_discovered_initiate_division/           # The PM — SIBLING slice
+    ├── on_division_discovered_initiate_division_sup.erl
+    └── on_division_discovered_initiate_division.erl   # gen_server: pg:join + dispatch
 ```
 
-**Why target domain?**
-- PM needs to know how to construct target commands
-- PM is a consumer of source events, producer of target commands
-- Keeps target domain self-contained
+**Why sibling, not nested?**
+
+1. **PMs are cross-slice.** A PM is an integration point between two domains, not a sub-feature of a single desk. Nesting it inside a desk hides the cross-cutting nature.
+2. **Business process flow is discoverable at the filesystem level.** When you `ls src/`, the `on_*` directories scream which external events this domain reacts to. Embedding them inside desks buries that information.
+3. **One PM may dispatch to multiple desks.** A cancellation cascade, a fan-out reprice, an evacuation force-settle — these don't map 1:1 to a single desk. Embedding in one desk would arbitrarily privilege that desk.
+4. **Same justification as `_api` handlers being co-located with desks (see Demon 14):** the structure should reflect what the code is for, not what it touches.
+
+**Why target domain (not source)?**
+- PM needs to know how to construct target commands.
+- PM is a consumer of source events, producer of target commands.
+- Source domain shouldn't know who reacts to its events.
+
+> **Decision recorded 2026-03-12, reinforced 2026-05-24.** Earlier versions of this doc placed the PM inside the target desk. That guidance was reversed. The sibling-slice pattern is canonical. See [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks).
 
 ---
 
 ## Complete Code Example
 
-### 1. The Listener (Subscribes to Source Events)
+The PM is a single gen_server that joins the source domain's pg scope in `init/1` and dispatches the target command on each event. No separate "listener" module is needed.
+
+### 1. The Process Manager (Single Module)
 
 ```erlang
-%%% @doc Listener: Subscribe to division_discovered facts from mesh
+%%% @doc Process Manager: React to division_discovered events and initiate divisions.
 %%%
-%%% Subscribes to mesh topic `hecate.venture.division_discovered`.
-%%% When a venture discovers a division, this listener receives the fact
-%%% and forwards it to the policy for processing.
+%%% Subscribes to the source domain's pg scope (`discover_divisions`)
+%%% and dispatches `initiate_division_v1` for each discovered division.
 %%%
-%%% Flow: Mesh FACT -> Listener -> Policy -> Command -> Aggregate
+%%% Naming convention: on_{source_event}_{action}_{target}
+%%% - Source: division_discovered (from discover_divisions)
+%%% - Action: initiate (unconditional; would be `maybe_initiate` if conditional)
+%%% - Target: division (in design_division)
 %%% @end
--module(subscribe_to_division_discovered).
+-module(on_division_discovered_initiate_division).
 -behaviour(gen_server).
 
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
--define(TOPIC, <<"hecate.venture.division_discovered">>).
+-include_lib("kernel/include/logger.hrl").
 
--record(state, {
-    subscription :: reference() | undefined
-}).
+-define(SCOPE, discover_divisions).
+-define(TOPIC, <<"division_discovered">>).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-    self() ! subscribe,
-    logger:info("[listener] Starting for topic ~s", [?TOPIC]),
-    {ok, #state{}}.
+    ok = pg:join(?SCOPE, ?TOPIC, self()),
+    ?LOG_INFO("[~s] joined scope=~s topic=~s", [?MODULE, ?SCOPE, ?TOPIC]),
+    {ok, #{}}.
 
 handle_call(_Request, _From, State) ->
     {reply, {error, unknown_call}, State}.
@@ -190,143 +202,89 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-%% Subscribe to mesh topic on startup
-handle_info(subscribe, State) ->
-    SubRef = subscribe_to_topic(?TOPIC),
-    {noreply, State#state{subscription = SubRef}};
-
-%% Receive fact from mesh and forward to process manager
-handle_info({mesh_fact, ?TOPIC, FactData}, State) ->
-    on_division_discovered_maybe_initiate_division:handle(FactData),
+handle_info({evoq_event, #{event_data := EventData}}, State) ->
+    spawn(fun() -> dispatch_initiate(EventData) end),
     {noreply, State};
-
-handle_info(_Info, State) ->
+handle_info(Other, State) ->
+    ?LOG_WARNING("[~s] unexpected message: ~p", [?MODULE, Other]),
     {noreply, State}.
 
-terminate(_Reason, #state{subscription = SubRef}) ->
-    unsubscribe(SubRef),
+terminate(_Reason, _State) ->
     ok.
 
-subscribe_to_topic(Topic) ->
-    case hecate_mesh_client:subscribe(Topic, self()) of
-        {ok, SubRef} ->
-            logger:info("[listener] Subscribed to ~s", [Topic]),
-            SubRef;
-        {error, not_connected} ->
-            erlang:send_after(5000, self(), subscribe),
-            undefined;
-        {error, Reason} ->
-            logger:error("[listener] Subscribe failed: ~p", [Reason]),
-            undefined
+%%====================================================================
+%% Internal
+%%====================================================================
+
+dispatch_initiate(EventData) ->
+    Params = #{
+        division_id => get_field(division_id, EventData),
+        venture_id => get_field(venture_id, EventData),
+        context_name => get_field(context_name, EventData),
+        description => get_field(description, EventData)
+    },
+    case initiate_division_v1:new(Params) of
+        {ok, Cmd} ->
+            log_result(Params, maybe_initiate_division:dispatch(Cmd));
+        {error, _} = Err ->
+            ?LOG_ERROR("[~s] bad params: ~p", [?MODULE, Err])
     end.
 
-unsubscribe(undefined) -> ok;
-unsubscribe(SubRef) -> hecate_mesh_client:unsubscribe(SubRef).
-```
+log_result(#{division_id := Id}, {ok, _Version, _Events}) ->
+    ?LOG_INFO("[~s] initiated division ~s", [?MODULE, Id]);
+log_result(#{division_id := Id}, {error, Reason}) ->
+    ?LOG_ERROR("[~s] failed to initiate division ~s: ~p", [?MODULE, Id, Reason]).
 
-### 2. The Process Manager (Makes Decisions, Dispatches Commands)
-
-```erlang
-%%% @doc Policy/Process Manager: React to division_discovered facts
-%%%
-%%% When a venture discovers a division (bounded context), this policy
-%%% decides whether and how to initiate that division.
-%%%
-%%% Naming convention: on_{source_event}_{action}_{target}
-%%% - Source: division_discovered (from discover_divisions)
-%%% - Action: maybe_initiate (policy decision)
-%%% - Target: division (in design_division)
-%%%
-%%% Current policy: Always initiate a division with the same name.
-%%% Future policies may:
-%%% - Skip initiation based on division type
-%%% - Create with different configurations
-%%% - Wait for additional conditions
-%%%
-%%% @end
--module(on_division_discovered_maybe_initiate_division).
-
--export([handle/1]).
-
-%% @doc Handle a division_discovered fact and potentially initiate the division
--spec handle(map()) -> ok | {error, term()}.
-handle(FactData) ->
-    VentureId = get_field(venture_id, FactData),
-    DivisionId = get_field(division_id, FactData),
-    ContextName = get_field(context_name, FactData),
-    Description = get_field(description, FactData),
-
-    logger:debug("[policy] Processing division ~s (~s) from venture ~s",
-                [DivisionId, ContextName, VentureId]),
-
-    %% Policy: Always initiate (future: conditional)
-    do_initiate(#{
-        division_id => DivisionId,
-        venture_id => VentureId,
-        context_name => ContextName,
-        description => Description
-    }).
-
-%% @doc Create and dispatch the initiate_division command
--spec do_initiate(map()) -> ok | {error, term()}.
-do_initiate(Params) ->
-    Result = create_and_dispatch(Params),
-    log_result(maps:get(division_id, Params), Result),
-    Result.
-
-create_and_dispatch(Params) ->
-    with_command(initiate_division_v1:new(Params)).
-
-with_command({ok, Cmd}) ->
-    dispatch(maybe_initiate_division:dispatch(Cmd));
-with_command({error, _} = Error) ->
-    Error.
-
-dispatch({ok, _Version, _Events}) -> ok;
-dispatch({error, _} = Error) -> Error.
-
-log_result(DivisionId, ok) ->
-    logger:info("[policy] Division ~s initiated", [DivisionId]);
-log_result(DivisionId, {error, Reason}) ->
-    logger:error("[policy] Failed to initiate division ~s: ~p", [DivisionId, Reason]).
-
-%% @private Get field from map supporting both atom and binary keys
 get_field(Key, Map) when is_atom(Key) ->
     BinKey = atom_to_binary(Key, utf8),
     maps:get(Key, Map, maps:get(BinKey, Map, undefined)).
 ```
 
-### 3. The Desk Supervisor (Owns Listener + PM)
+The PM **spawns a worker** for the actual dispatch so the gen_server mailbox keeps draining. This matters when the dispatch path makes any blocking call (read model lookup, mesh RPC).
+
+### 2. The PM's Own Supervisor (the Slice's Sup)
 
 ```erlang
-%%% @doc Desk supervisor for initiate_division
-%%%
-%%% Supervises:
-%%% - subscribe_to_division_discovered (listener)
-%%% - Workers as needed
-%%%
-%%% The process manager module doesn't need supervision as it's
-%%% stateless - called synchronously by the listener.
+%%% @doc Supervisor for the on_division_discovered_initiate_division slice.
+%%% Owns the PM gen_server. One-for-one, permanent restart.
 %%% @end
--module(initiate_division_desk_sup).
+-module(on_division_discovered_initiate_division_sup).
 -behaviour(supervisor).
 
--export([start_link/0]).
--export([init/1]).
+-export([start_link/0, init/1]).
 
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
     Children = [
-        #{
-            id => subscribe_to_division_discovered,
-            start => {subscribe_to_division_discovered, start_link, []},
-            restart => permanent,
-            type => worker
-        }
+        #{id => on_division_discovered_initiate_division,
+          start => {on_division_discovered_initiate_division, start_link, []},
+          restart => permanent,
+          type => worker}
     ],
-    {ok, {{one_for_one, 5, 10}, Children}}.
+    {ok, {{one_for_one, 10, 10}, Children}}.
+```
+
+### 3. Wiring the Slice into the Domain Sup
+
+The target domain's CMD app supervisor starts each PM slice's supervisor alongside the desk supervisors. PMs are first-class slices, not children of desks.
+
+```erlang
+%%% design_division CMD app: domain supervisor
+init([]) ->
+    Children = [
+        %% Desks
+        #{id => initiate_division_desk_sup,
+          start => {initiate_division_desk_sup, start_link, []},
+          type => supervisor},
+
+        %% PM slices (cross-domain integration points)
+        #{id => on_division_discovered_initiate_division_sup,
+          start => {on_division_discovered_initiate_division_sup, start_link, []},
+          type => supervisor}
+    ],
+    {ok, {#{strategy => one_for_one, intensity => 10, period => 10}, Children}}.
 ```
 
 ---
@@ -359,9 +317,11 @@ should_auto_initiate(_) -> false.  %% Manual initiation required
 |--------------|----------------|------------------|
 | Handler calls other domain | Tight coupling | Use Process Manager |
 | PM in source domain | Source knows too much about target | PM in target domain |
-| PM without "maybe" in name | Hides conditional nature | Include "maybe" if conditional |
+| PM nested inside target desk | Hides the cross-slice integration point | PM as sibling slice with own `_sup` |
+| PM without "maybe" in name when conditional | Hides conditional nature | Include "maybe" if conditional; omit if always-act |
 | Direct event passing | Bypasses command validation | Create proper command |
-| Global event bus subscription | Hidden dependencies | Explicit listener in desk |
+| Global event bus subscription | Hidden dependencies | Explicit pg join in PM's `init/1` |
+| Inline dispatch in PM's `handle_info` | Blocks gen_server mailbox | Spawn worker for dispatch |
 
 ---
 
@@ -369,15 +329,16 @@ should_auto_initiate(_) -> false.  %% Manual initiation required
 
 ```
 design_division_sup (domain supervisor)
-├── initiate_division_desk_sup
-│   └── subscribe_to_division_discovered (listener worker)
-│       └── calls on_division_discovered_maybe_initiate_division:handle/1
-├── another_desk_sup
-│   └── ...
+├── initiate_division_desk_sup                          (desk supervisor)
+│   └── initiate_division workers
+├── on_division_discovered_initiate_division_sup        (PM slice supervisor)
+│   └── on_division_discovered_initiate_division        (gen_server: pg + dispatch)
+├── on_lot_evacuated_force_settle_division_sup          (another PM slice)
+│   └── on_lot_evacuated_force_settle_division
 └── ...
 ```
 
-**The PM module is stateless** - it's called synchronously by the listener and doesn't need its own process.
+PMs are first-class siblings of desks under the domain supervisor. Each PM slice owns its own supervisor and gen_server.
 
 ---
 
@@ -404,10 +365,10 @@ design_division_sup (domain supervisor)
 ┌─────────────────────────────────────────────────────────────────┐
 │                   DOMAIN B (design_division)                    │
 │                                                                 │
-│  Listener: subscribe_to_division_discovered                     │
-│      ↓ receives FACT                                            │
-│  Process Manager: on_division_discovered_maybe_initiate         │
-│      ↓ policy decision + creates command                        │
+│  PM slice: on_division_discovered_initiate_division             │
+│      ↓ gen_server pg:joins source scope                         │
+│      ↓ receives FACT, spawns worker                             │
+│      ↓ worker decides + creates command                         │
 │  Command: initiate_division_v1                                  │
 │      ↓                                                          │
 │  Handler: maybe_initiate_division                               │
@@ -421,12 +382,13 @@ design_division_sup (domain supervisor)
 ## Key Takeaways
 
 1. **Domains don't call each other directly** - Process managers bridge the gap
-2. **PM lives in TARGET domain** - It knows how to construct target commands
-3. **Naming convention reveals purpose** - `on_{event}_{action}_{target}`
-4. **"Maybe" indicates policy** - The PM can choose not to act
-5. **Listener + PM in same desk** - Vertical slicing applies
-6. **PM is stateless** - Called by listener, no process needed
-7. **Loose coupling enables testing** - Each domain testable in isolation
+2. **PM lives in TARGET domain as a SIBLING slice** - own directory, own `_sup`, own gen_server
+3. **`on_*` directories scream business process flow at the filesystem level** - this is the primary justification for the sibling-slice rule
+4. **Naming convention reveals purpose** - `on_{event}_{action}_{target}`
+5. **"Maybe" indicates conditional policy** - omit when the PM always acts
+6. **PM is a gen_server that joins pg in `init/1` and dispatches** - no separate listener module
+7. **Dispatch runs in a spawned worker** - keeps the gen_server mailbox draining under load
+8. **Loose coupling enables testing** - each domain testable in isolation
 
 ---
 

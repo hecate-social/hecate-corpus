@@ -153,18 +153,22 @@ Every desk is a complete capability with three aspects:
 | **Policies** | Decision rules: when event/fact arrives → dispatch command? | "When discovery completes, declare expertise with discovered domains" |
 | **Emitters** | Facts this desk publishes to the mesh after success | `expertise_declared_v1` to mesh topic |
 
-**There is no such thing as a "PM slice."** A process manager is a **policy of the desk it triggers**. It lives inside that desk's directory, not as a separate slice.
+**A PM IS its own slice.** A process manager is a sibling of desks in the target CMD app, with its own directory, supervisor, and gen_server. This was reversed from the original (2026-02-12) guidance — see [ANTIPATTERNS_STRUCTURE.md Demon 18](ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks).
 
 ```
-declare_expertise/
-├── declare_expertise_v1.erl                        # Command
-├── expertise_declared_v1.erl                       # Event
-├── maybe_declare_expertise.erl                     # Handler
-├── declare_expertise_dispatch.erl                  # Dispatch
-└── on_discovery_completed_declare_expertise.erl    # Policy (inbox → decision → command)
+apps/manage_capabilities/src/
+├── declare_expertise/                                  # the desk
+│   ├── declare_expertise_v1.erl                        # Command
+│   ├── expertise_declared_v1.erl                       # Event
+│   ├── maybe_declare_expertise.erl                     # Handler
+│   └── declare_expertise_api.erl                       # HTTP entry
+│
+└── on_discovery_completed_declare_expertise/           # PM sibling slice
+    ├── on_discovery_completed_declare_expertise_sup.erl
+    └── on_discovery_completed_declare_expertise.erl    # pg:join + dispatch
 ```
 
-**If you see a standalone `on_{event}_{action}/` directory** → it's a policy that belongs inside the target desk.
+**If you see `on_*` logic nested inside a desk directory** → it should be lifted out into its own sibling slice. `on_*` directories at the top level of `src/` are the discoverability anchor for cross-domain integration.
 
 ### Step 8: Reconstruct the Business Process
 
@@ -193,7 +197,7 @@ The reconstructed flow should read like a story. If it doesn't, the naming is wr
 - [ ] Every long-lived sub-process has lifecycle (open/shelve/resume/conclude)
 - [ ] Lifecycle verbs are process-specific (no generic start_phase/pause_phase)
 - [ ] Walking skeleton: initiate + archive both present
-- [ ] No standalone PM slices — PMs are policies inside the target desk (Demon 18)
+- [ ] PMs ARE standalone sibling slices in target CMD app, named `on_{src_event}_{action}_{target}/` — never nested inside desks (Demon 18, reversed)
 - [ ] Every desk has complete capability: Inboxes, Policies, Emitters
 - [ ] Every CMD event has a QRY projection
 - [ ] Every QRY table has at least one query desk

@@ -54,8 +54,8 @@ All 5 subscribe to events via `reckon_evoq_adapter:subscribe/5`. The difference 
 - **Projection** (1): Writes to a read model (SQLite, CouchDB). Lives in the PRJ app.
 - **Integration Emitter** (2): Broadcasts to OTP `pg` groups for inter-domain consumption. Lives in CMD desk.
 - **Mesh Emitter** (3): Publishes to Macula mesh for WAN/cross-network consumption. Lives in CMD desk.
-- **Policy** (4): Reacts to an internal domain event, dispatches a command to own aggregate. Lives in the target CMD desk.
-- **Listener** (5): Reacts to a FACT from outside (another domain via pg, or mesh), dispatches a local command. Lives in the target CMD desk.
+- **Policy** (4): Reacts to an internal domain event, dispatches a command to own aggregate. Lives as a sibling slice in the target CMD app under `apps/{cmd_app}/src/on_{event}_{action}_{target}/`.
+- **Listener** (5): Reacts to a FACT from outside (another domain via pg, or mesh), dispatches a local command. Lives as a sibling slice in the target CMD app under `apps/{cmd_app}/src/on_{fact}_{action}_{target}/`. (Reversed 2026-03-12 — was originally "inside the target desk"; see Demon 18.)
 
 ### Policy vs Listener
 
@@ -85,8 +85,8 @@ A command without an API handler is NOT dead code — it may only be triggered b
 | Projection | `apps/project_{plural}/src/{event}/` | PRJ |
 | Integration Emitter | `apps/{cmd_app}/src/{desk}/` | CMD |
 | Mesh Emitter | `apps/{cmd_app}/src/{desk}/` | CMD |
-| Policy | `apps/{cmd_app}/src/{desk}/` | CMD |
-| Listener | `apps/{cmd_app}/src/{desk}/` | CMD |
+| Policy | `apps/{cmd_app}/src/on_{event}_{action}_{target}/` (sibling of desks) | CMD |
+| Listener | `apps/{cmd_app}/src/on_{fact}_{action}_{target}/` (sibling of desks) | CMD |
 
 ---
 

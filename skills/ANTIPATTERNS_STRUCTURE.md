@@ -70,59 +70,19 @@ See [CARTWHEEL.md](../philosophy/CARTWHEEL.md) for the complete canonical struct
 
 ---
 
-## 🔥 Listeners as Separate Desks
+## ⚠️ Listeners as Separate Desks (REVERSED 2026-05-24)
 
 **Date:** 2026-02-08
+**Reversed:** 2026-05-24
 **Origin:** Division listener architecture discussion
 
-### The Antipattern
+### Status: REVERSED
 
-Creating a listener as its own desk when it only serves one other desk.
+This demon was reversed. The current rule (see [Demon 18 below](#-demon-18-process-managers-inside-desks)) is the opposite: **PMs and cross-domain listeners ARE their own slices**, sibling to desks, named `on_{source_event}_{action}_{target}/`. The discoverability of `on_*` directories at the filesystem level was judged more valuable than co-locating the trigger with the desk it serves.
 
-**Example (WRONG):**
-```
-design_division/src/
-├── subscribe_to_division_discovered/      # Separate desk
-│   ├── subscribe_to_division_discovered.erl
-│   └── subscribe_to_division_discovered_sup.erl
-│
-└── initiate_division/                     # The desk it triggers
-    ├── initiate_division_v1.erl
-    └── maybe_initiate_division.erl
-```
+The 2026-02-08 framing — "listener belongs IN desk X" — is no longer canonical. It applied a vertical-slice heuristic to the wrong axis: PMs cut *across* slices, so they get their own slice rather than being nested in one. A listener that does nothing but `pg:join` and forward to a single desk is still legitimate — it just lives in its own `on_*/` slice.
 
-This is **horizontal thinking in disguise** — grouping by "listeners" vs "commands".
-
-### The Rule
-
-> **If a listener's sole purpose is to trigger desk X, it lives IN desk X.**
-
-### The Correct Structure
-
-```
-design_division/src/
-└── initiate_division/
-    ├── initiate_division_v1.erl
-    ├── division_initiated_v1.erl
-    ├── maybe_initiate_division.erl
-    ├── subscribe_to_division_discovered.erl            # Lives here
-    └── on_division_discovered_maybe_initiate_division.erl  # Lives here
-```
-
-The desk owns **everything needed to initiate divisions** — including how it gets triggered.
-
-### When Listeners CAN Be Separate
-
-A listener MAY be its own desk when:
-- It triggers **multiple** different desks based on message content
-- It's truly general-purpose infrastructure (rare)
-- It serves a query service, not a command service
-
-### The Test
-
-Ask: "Does this listener exist ONLY to trigger desk X?"
-- **Yes** → Put it in desk X
-- **No** → Consider a separate desk (but think hard)
+The single remaining caution: don't create an `on_*` slice that wraps a trivial in-process callback the desk could just do itself. Cross-domain integration via pg / mesh = sibling slice. Internal handler chaining within the same domain = stays in the desk.
 
 ---
 
@@ -155,29 +115,37 @@ apps/design_division/src/
 
 ### The Rule
 
-> **Each listener belongs to the desk it triggers, supervised by that desk's supervisor.**
+> **Each PM / cross-domain listener owns its own slice supervisor.** No central listener supervisor, no `listeners/` directory.
 
 ### The Correct Structure
 
+PMs are sibling slices to desks under the domain supervisor. Each PM slice owns a single-worker supervisor.
+
 ```
 apps/design_division/src/
-├── initiate_division/
-│   ├── initiate_division_desk_sup.erl                          # Desk supervisor
-│   └── on_division_discovered_v1_from_pg_maybe_initiate_division.erl
+├── initiate_division/                                          # desk
+│   ├── initiate_division_desk_sup.erl
+│   └── ...
 │
-└── complete_division/
-    ├── complete_division_desk_sup.erl                          # Desk supervisor
-    └── on_all_desks_implemented_v1_from_pg_maybe_complete_division.erl
+├── on_division_discovered_initiate_division/                   # PM sibling slice
+│   ├── on_division_discovered_initiate_division_sup.erl
+│   └── on_division_discovered_initiate_division.erl
+│
+└── on_all_desks_implemented_complete_division/                 # another PM sibling slice
+    ├── on_all_desks_implemented_complete_division_sup.erl
+    └── on_all_desks_implemented_complete_division.erl
 ```
+
+The domain supervisor starts each PM slice's supervisor alongside the desk supervisors.
 
 ### Why It Matters
 
-- **Fault isolation** — Listener crash only affects its desk
-- **Discoverability** — To understand desk X, look only in `X/`
-- **No orphans** — Every listener has a clear owner
-- **Vertical slicing** — No horizontal grouping by technical concern
+- **Fault isolation** — PM crash only affects its own slice.
+- **Discoverability** — `on_*` directories scream which external events the domain reacts to.
+- **No orphans** — Every PM has a clear owner (its slice sup).
+- **Vertical slicing** — No horizontal grouping by technical concern.
 
-See [INTEGRATION_TRANSPORTS.md](../philosophy/INTEGRATION_TRANSPORTS.md) for desk structures.
+See [PROCESS_MANAGERS.md](../philosophy/PROCESS_MANAGERS.md) and [INTEGRATION_TRANSPORTS.md](../philosophy/INTEGRATION_TRANSPORTS.md) for slice structures.
 
 ---
 
@@ -243,56 +211,63 @@ Reference: `skills/codegen/erlang/CODEGEN_ERLANG_TEMPLATES.md` → API Handler T
 
 ---
 
-## 🔥 Demon 18: Process Managers as Separate Slices
+## 🔥 Demon 18: Process Managers Inside Desks
 
-**Date exorcised:** 2026-02-12
-**Where it appeared:** `guide_node_lifecycle` — `on_llm_detected_announce_capability/`, `on_llm_removed_retract_capability/`, `on_llm_status_reported_update_capability/`
-**Cost:** PMs scattered as standalone slices instead of being part of the desk they serve
+**Date exorcised:** 2026-02-12 (original direction)
+**Reversed:** 2026-03-12 (rationale recorded); reinforced 2026-05-24
+**Where it appeared:** Various scaffolds that nested `on_{event}_{action}_{target}.erl` inside the target desk directory.
+**Cost:** Cross-domain integration points became invisible at the filesystem level — you couldn't tell which external events a domain reacted to without grepping inside every desk.
 
 ### The Lie
 
-"A process manager is a first-class architectural element. It deserves its own slice directory."
+"A PM is a policy of the desk it triggers. It belongs inside that desk's directory."
 
-### Why It's Wrong
+This was the original (2026-02-12) framing. **It was wrong.** Production experience showed PMs are not subordinate to a single desk — they are cross-cutting integration points that belong at the same architectural level as desks themselves.
 
-A PM has ONE job: react to an event and dispatch a command to a specific desk. That makes it a **policy** of that desk — part of the desk's capability (Inbox → Policy → Command). Giving it a separate slice:
+### Why It's Actually Wrong
 
-1. **Scatters the desk's logic** — to understand `announce_capability`, you must also find `on_llm_detected_announce_capability/` elsewhere
-2. **Creates false peers** — the PM looks like a sibling of `announce_capability` when it's actually a subordinate
-3. **Horizontal in disguise** — a `on_*` directory is just a `process_managers/` folder with extra steps
+1. **PMs are cross-slice.** A PM is an integration point between two domains, not a sub-feature of a single desk. Nesting it hides the cross-cutting nature.
+2. **Business process flow becomes invisible.** When you `ls src/`, you cannot tell which external events the domain reacts to. You must grep inside every desk directory to find `on_*` files.
+3. **One PM can dispatch to multiple desks.** A cancellation cascade, an evacuation force-settle, a fan-out reprice — these don't map 1:1 to any single desk. Nesting in one desk arbitrarily privileges that desk.
+4. **The desk-completeness argument cuts both ways.** Yes, hiding the PM inside the desk makes "the desk owns everything." But that's exactly the cost: you lose visibility into integration points.
 
-### The Rule
+### The Rule (Current)
 
-> **A PM is a policy of the desk it triggers. It lives INSIDE that desk's directory.**
+> **A PM is a first-class sibling slice in the target CMD app.** Own directory. Own supervisor. Own gen_server. Named `on_{source_event}_{action}_{target}/`.
 
 ```
-announce_capability/
-├── announce_capability_v1.erl                    # Command
-├── capability_announced_v1.erl                   # Event
-├── maybe_announce_capability.erl                 # Handler
-├── announce_capability_dispatch.erl              # Dispatch
-└── on_llm_detected_announce_capability.erl       # Policy (inbox + decision)
+apps/manage_capabilities/src/
+├── announce_capability/                                # desk
+│   ├── announce_capability_v1.erl
+│   ├── capability_announced_v1.erl
+│   ├── maybe_announce_capability.erl
+│   └── announce_capability_api.erl
+│
+└── on_llm_detected_announce_capability/                # PM sibling slice
+    ├── on_llm_detected_announce_capability_sup.erl
+    └── on_llm_detected_announce_capability.erl
 ```
 
-### The Desk Capability Model
+### Why Sibling, Not Nested
 
-Every desk is a complete capability with three aspects:
-
-| Aspect | What It Is | Lives In |
-|--------|-----------|----------|
-| **Inboxes** | Topics this desk subscribes to (pg + mesh) | Policy modules inside the desk |
-| **Policies** | Decision rules: event arrives → dispatch command? | Policy modules inside the desk |
-| **Emitters** | Facts published to mesh after success | Emitter modules inside the desk |
+| Concern | Nested-in-desk | Sibling slice |
+|---------|----------------|---------------|
+| "What external events does this domain react to?" | Hidden — grep needed | Visible — `ls src/` |
+| One PM → multiple desks | Awkward (which desk owns it?) | Natural |
+| Supervision granularity | PM crash takes down desk infra | PM crash isolated |
+| Cross-cutting nature | Implied subordination | Explicit peer |
 
 ### The Test
 
-> "If I delete this desk directory, does everything related to this capability disappear?"
+> "When I `ls src/` in a CMD app, can I immediately see every cross-domain integration point?"
 >
-> If no — some logic is scattered in a separate PM slice — that PM belongs inside the desk.
+> If no — PMs are nested inside desks — pull them out into sibling slices.
 
 ### The Lesson
 
-> **There is no such thing as a "PM slice." A PM is a policy. Policies belong to desks.**
+> **PMs are cross-slice. They get their own slice. The `on_*` prefix and the slice directory together are the discoverability anchor for business process flow.**
+
+See [PROCESS_MANAGERS.md](../philosophy/PROCESS_MANAGERS.md) for the canonical pattern and code template.
 
 ---
 

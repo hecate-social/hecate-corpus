@@ -94,15 +94,16 @@ apps/discover_divisions/src/
 
 ```
 apps/design_division/src/
-└── initiate_division/
-    ├── initiate_division_v1.erl           # Command
-    ├── division_initiated_v1.erl          # Event (in Division stream!)
-    ├── maybe_initiate_division.erl        # Handler
-    │
-    │ # Listener + Policy live IN this desk (vertical slice)
-    ├── initiate_division_desk_sup.erl
-    ├── subscribe_to_division_discovered.erl            # Listener
-    └── on_division_discovered_maybe_initiate_division.erl  # Policy
+├── initiate_division/                                  # desk
+│   ├── initiate_division_desk_sup.erl
+│   ├── initiate_division_v1.erl                        # Command
+│   ├── division_initiated_v1.erl                       # Event (in Division stream!)
+│   ├── maybe_initiate_division.erl                     # Handler
+│   └── initiate_division_api.erl
+│
+└── on_division_discovered_initiate_division/           # PM sibling slice
+    ├── on_division_discovered_initiate_division_sup.erl
+    └── on_division_discovered_initiate_division.erl   # pg:join + dispatch
 ```
 
 ---
@@ -146,25 +147,33 @@ GET  /api/divisions/:id              # Get specific division
 
 ---
 
-## Listener Placement Rule
+## Listener / PM Placement Rule
 
-The listener (`subscribe_to_division_discovered`) lives **inside** the `initiate_division/` desk, NOT as a separate desk.
+The PM (`on_division_discovered_initiate_division`) lives as a **sibling slice** of `initiate_division/` in the target CMD app, with its own directory, supervisor, and gen_server.
 
-**Why?** Its sole purpose is to trigger division initiation. Vertical slicing means the desk owns everything it needs.
+**Why?** PMs are cross-slice integration points, not sub-features of any one desk. Putting them at the top level of `src/` with the `on_*` naming convention means the cross-domain integration points are visible from `ls`.
 
 ```
-❌ WRONG:
-design_division/src/
-├── subscribe_to_division_discovered/    # Separate desk
-└── initiate_division/                   # Another desk
-
-✅ CORRECT:
+❌ WRONG (nested inside the desk it triggers):
 design_division/src/
 └── initiate_division/
     ├── ...command, event, handler...
-    ├── subscribe_to_division_discovered.erl    # IN the desk
-    └── on_division_discovered_maybe_initiate_division.erl
+    └── on_division_discovered_initiate_division.erl   # buried
+
+✅ CORRECT (sibling slice):
+design_division/src/
+├── initiate_division/                                  # desk
+│   ├── initiate_division_v1.erl
+│   ├── division_initiated_v1.erl
+│   ├── maybe_initiate_division.erl
+│   └── initiate_division_api.erl
+│
+└── on_division_discovered_initiate_division/           # PM sibling slice
+    ├── on_division_discovered_initiate_division_sup.erl
+    └── on_division_discovered_initiate_division.erl   # gen_server: pg:join + dispatch
 ```
+
+> Earlier guidance (2026-02-08) placed the listener INSIDE the desk. That was reversed 2026-03-12, reinforced 2026-05-24. See [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks) and [PROCESS_MANAGERS.md Location Rule](PROCESS_MANAGERS.md#location-rule).
 
 ---
 

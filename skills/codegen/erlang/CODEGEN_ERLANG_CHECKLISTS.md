@@ -38,17 +38,23 @@ apps/{domain}/
 │   ├── {domain}_sup.erl
 │   ├── {domain}_store.erl              # ReckonDB instance
 │   │
-│   └── {command}/                      # DESK directory
-│       ├── {command}_desk_sup.erl
-│       ├── {command}_v1.erl
-│       ├── {event}_v1.erl
-│       ├── maybe_{command}.erl
-│       ├── {command}_responder_v1.erl
-│       ├── {event}_to_mesh.erl
-│       └── on_{trigger_event}_maybe_{command}.erl  # (optional PM)
+│   ├── {command}/                      # DESK directory
+│   │   ├── {command}_desk_sup.erl
+│   │   ├── {command}_v1.erl
+│   │   ├── {event}_v1.erl
+│   │   ├── maybe_{command}.erl
+│   │   ├── {command}_responder_v1.erl
+│   │   ├── {event}_to_mesh.erl
+│   │   └── {command}_api.erl
+│   │
+│   └── on_{src_event}_{action}_{target}/    # PM SIBLING SLICE (one per cross-domain integration)
+│       ├── on_{src_event}_{action}_{target}_sup.erl
+│       └── on_{src_event}_{action}_{target}.erl
 │
 └── rebar.config
 ```
+
+PMs are siblings of desks, not nested. The `on_*/` directories at the top level of `src/` make every cross-domain integration point visible from `ls`. (See [ANTIPATTERNS_STRUCTURE.md Demon 18](../../ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks).)
 
 ### PRJ Domain App
 
@@ -203,12 +209,13 @@ Generate:
 
 ### New Policy/PM
 
-Given: `trigger_event=llm_model_detected`, `command=announce_capability`
+Given: `src_event=llm_model_detected`, `action=announce`, `target=capability`
 
-Generate:
+Generate a SIBLING SLICE in the target CMD app (not nested inside the desk):
 
-- [ ] `src/announce_capability/on_llm_model_detected_maybe_announce_capability.erl`
-- [ ] Update `announce_capability_desk_sup.erl` to include policy worker
+- [ ] `src/on_llm_model_detected_announce_capability/on_llm_model_detected_announce_capability_sup.erl` (single-worker supervisor)
+- [ ] `src/on_llm_model_detected_announce_capability/on_llm_model_detected_announce_capability.erl` (gen_server: `pg:join` in `init/1`, spawn worker for dispatch in `handle_info`)
+- [ ] Add `on_llm_model_detected_announce_capability_sup` as a child of the **domain supervisor** (`{domain}_sup.erl`), peer to desk sups — NOT a child of `announce_capability_desk_sup.erl`
 
 ---
 
