@@ -240,7 +240,9 @@ get_field(Key, Map) when is_atom(Key) ->
     maps:get(Key, Map, maps:get(BinKey, Map, undefined)).
 ```
 
-The PM **spawns a worker** for the actual dispatch so the gen_server mailbox keeps draining. This matters when the dispatch path makes any blocking call (read model lookup, mesh RPC).
+The PM **spawns a worker** for the actual dispatch so the gen_server mailbox keeps draining. This matters when the dispatch path makes any blocking call.
+
+> **Pattern note:** If the dispatch needs cross-domain data, the worker should run a [Command Pipeline](COMMAND_PIPELINES.md) — not inline cross-domain reads. The PM stays thin (join pg, spawn worker, dispatch); all the enrichment, validation, and external lookups live in the pipeline's steps. This keeps the cardinal-sin invariant intact and makes the PM's integration surface a single, declarative file.
 
 ### 2. The PM's Own Supervisor (the Slice's Sup)
 

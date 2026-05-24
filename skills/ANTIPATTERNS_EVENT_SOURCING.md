@@ -602,6 +602,16 @@ If you ever write this comment:
 > **A process manager that reads from a read model is a process manager that will fail.**
 > **If your event is too poor, your event is wrong. Fix the event.**
 
+### The Structural Cure: Command Pipelines
+
+Enriching the source event is the right fix when the data lives in the source aggregate. But it doesn't address the case where the consuming domain needs data from a **third** domain entirely (e.g., the egress saga needs both session state from `entry2exit` and permit status from `pricing`). The source aggregate has neither.
+
+The general structural cure is the **command pipeline**: all external reads happen in named pipeline steps BEFORE the aggregate sees the command. The aggregate stays a pure function of `(State, EnrichedCommand)`. Any cross-domain read — whether to enrich a HOPE-driven command or to enrich a PM-dispatched command — happens in the pipeline, at command-preparation time, never inside event handling.
+
+See [philosophy/COMMAND_PIPELINES.md](../philosophy/COMMAND_PIPELINES.md) for the pattern and [skills/codegen/erlang/CODEGEN_ERLANG_PIPELINES.md](codegen/erlang/CODEGEN_ERLANG_PIPELINES.md) for templates.
+
+The two cures stack: **enrich the event at the source** when data is local, **enrich the command via pipeline** when data is cross-domain. Together they keep aggregates pure and PMs free of read-model lookups.
+
 ---
 
 ## 🔥 Aggregate `apply/2` Sees Two Event Shapes (and `execute/2` Must Not Pre-Wrap `data`)
