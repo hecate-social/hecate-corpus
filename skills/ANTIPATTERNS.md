@@ -35,7 +35,7 @@
 | 25 | Centralized Route Registration Files | One file per app listing all routes — horizontal grouping | 2026-02-16 |
 | 26 | PG Emitters "Dead Code" Without Subscribers | Pub/sub publishers are infrastructure — no subscribers ≠ dead code | 2026-02-23 |
 | 27 | Hardcoded User/Submitter IDs | Commands must carry the real actor identity, not placeholders | 2026-02-23 |
-| 28 | No Tests on Event-Sourced Domains | Aggregates, projections, and policies need tests — dialyzer alone isn't enough | 2026-02-23 |
+| 28 | No Tests on Event-Sourced Domains | Tests written BEFORE (preferred) or IMMEDIATELY AFTER the code file, same session — never deferred to CI/workflow gates | 2026-02-23 |
 | 29 | Missing `/ui/[...]` Cowboy Route in Plugin Daemon | Plugin has manifest + socket but no static file route — hecate-web silently drops it | 2026-02-24 |
 | 30 | Forgetting to Bump `.app.src` Versions Before Tagging | Tag a release without bumping vsn in .app.src files — OCI image ships old version | 2026-02-24 |
 | 31 | Inline Projections After Command Dispatch | LiveViews writing to read models after evoq dispatch — bypasses PRJ department | 2026-03-02 |

@@ -123,7 +123,31 @@ Dialyzer proves types align. Tests prove behavior is correct. Both are needed.
 
 ### The Rule
 
-> **Every event-sourced domain needs tests BEFORE it ships. Dialyzer is a type checker, not a behavior checker.**
+> **Tests must be written BEFORE the code file (preferred) or IMMEDIATELY AFTER it. Never deferred to "before it ships" or attached to a CI/workflow gate.**
+
+The "ship" framing is the lie. By the time something is "shipping" the code has been merged, the author has moved on, and the gap is now a backlog item that never closes. The test belongs alongside the code as a unit of work — not as a downstream chore.
+
+### When to Write Tests
+
+Two acceptable moments:
+
+1. **Before** writing the `.erl` file — TDD style. Write a failing test that describes the slice's behaviour, then write the code that makes it pass. Best when the behaviour is well-understood (e.g. an aggregate guard rejecting an already-archived command).
+2. **Immediately after** writing the `.erl` file — same commit, same task, same session. Acceptable when the behaviour took some exploration to land. The bar: the test file lands before the next desk/slice is started.
+
+**Unacceptable:**
+
+- "I'll add tests later" — later never arrives
+- "Tests can come in a follow-up PR" — the PR rots in review
+- "CI will run them when they exist" — a green CI on zero tests is a lie
+- "Pre-commit hook blocks unverified commits" — hooks are local and bypassable, and they don't write tests for you
+
+### Tests Are Not a Workflow Action
+
+> **Test creation MUST NOT depend on any workflow gate — CI, pre-commit hooks, PR templates, release checklists, or any other downstream automation.**
+
+Workflow gates check *whether tests passed*, not *whether tests exist*. A workflow can fail a build for a regression in an existing test. It cannot fail a build for a slice that ships with no test at all — because there's nothing to run, and "no tests" is indistinguishable from "all tests passed" to most green/red signals.
+
+The discipline lives in the author's hands, in the same commit as the code. If the author skips the test, no later automation can recover the missed opportunity to verify behaviour at the moment the design decision was fresh.
 
 ### Minimum Viable Test Suite
 
@@ -160,6 +184,8 @@ projection_with_record_test() ->
 
 > **Dialyzer catches type bugs. Tests catch logic bugs. An event-sourced domain without tests is a domain you can't safely refactor.**
 > **The appstore's tuple/list bug (Demon #19) was found by dialyzer. The next bug won't be.**
+>
+> **Write the test in the same session as the code, in the same commit if possible. Never push the responsibility onto CI, hooks, or "later".**
 
 ---
 
