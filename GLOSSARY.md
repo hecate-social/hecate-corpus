@@ -121,6 +121,14 @@ A Slip is what a Desk adds to a Dossier. It carries a subset of the Dossier's st
 
 | Synonym | Event |
 
+### Decision (reserved term)
+
+A sibling write-side construct to the Dossier, **reserved but not implemented**. A Decision would write an event conditional on a tag-filter context query, rather than on a stream version. It has no identity, no lifetime, no folder. Used for cross-cutting checks (uniqueness, allocation, idempotency) where the Dossier shape is genuinely wrong.
+
+| Status | Reserved. No code implements this today. |
+| Would map to | `evoq_decision` behaviour in Evoq + `append_if_no_tag_matches` primitive in ReckonDB |
+| Why reserved | To prevent vocabulary fragmentation if the position on query-based concurrency ever changes. See [philosophy/CONSISTENCY_BOUNDARIES.md](philosophy/CONSISTENCY_BOUNDARIES.md). |
+
 ### Process
 
 A long-lived Dossier with lifecycle protocol (`initiate / open / shelve / resume / conclude / archive`). The Dossier of a Process is its full event stream.

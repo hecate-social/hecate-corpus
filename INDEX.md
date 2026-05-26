@@ -59,7 +59,8 @@ A linear reading path. Stop when you have enough to ship.
 17. [`skills/NAMING_CONVENTIONS.md`](skills/NAMING_CONVENTIONS.md) — the strict naming rules
 18. [`skills/antipatterns/INDEX.md`](skills/antipatterns/INDEX.md) — demon index (skim first)
 19. [`philosophy/COMMAND_PIPELINES.md`](philosophy/COMMAND_PIPELINES.md) — Demon 41's cure
-20. [`philosophy/INTEGRATION_TRANSPORTS.md`](philosophy/INTEGRATION_TRANSPORTS.md) — HOPE / FACT / FEEDBACK
+20. [`philosophy/CONSISTENCY_BOUNDARIES.md`](philosophy/CONSISTENCY_BOUNDARIES.md) — Hecate's position vs aggregateless ES / DCB
+21. [`philosophy/INTEGRATION_TRANSPORTS.md`](philosophy/INTEGRATION_TRANSPORTS.md) — HOPE / FACT / FEEDBACK
 
 ### Production (read when relevant)
 21. [`guides/HECATE_PLUGIN_DIRECTORY_CONVENTION.md`](guides/HECATE_PLUGIN_DIRECTORY_CONVENTION.md) — plugin layout
