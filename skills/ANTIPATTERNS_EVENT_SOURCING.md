@@ -684,4 +684,89 @@ event_data(Event) ->                              %% raw in-memory event
 
 ---
 
+## 🔥 Demon 49: Discarding `evoq_dispatcher:dispatch/2`'s Return Value
+
+**Date exorcised:** 2026-05-26
+**Where it appeared:** `hecate-services/hecate-parksim/apps/simulate_visit/src/simulate_visit.erl` — three call sites, `_ = maybe_X:dispatch(...)`
+**Cost:** ~2 hours of "events vanish silently" debugging across multiple boot probes
+
+### The Lie
+
+"Dispatch is fire-and-forget. Errors will log themselves."
+
+### What Happened
+
+`evoq_dispatcher:dispatch/2` returns `{ok, Version, Events}` on success
+and `{error, Reason}` on failure. The error channel is the ONLY channel
+for validation rejections (stream-id format, payload shape) and
+aggregate-side `{error, _}` returns from `execute/2`.
+
+Discarding the result with `_ = dispatch(...)` throws away both
+channels. Symptom: the caller appears to succeed (no crash, no log
+line, no exception), but events never land in the store. Downstream
+projections are silent because nothing was written to react to.
+
+In the worked example, `simulate_visit:enter/4` minted UUID-v4 session
+ids (`9D9D16B6-F56E-...`) that failed the reckon-db stream-id validator.
+Each dispatch returned
+`{error, {invalid_stream_id, malformed_user_id, ...}}` — and the
+underscore discarded every one. A 12-second e2e probe produced zero
+events; the actual cause was 100% caller-side error swallow.
+
+```erlang
+%% WRONG — the only error channel goes into the void
+enter(SessionId, LotId, Plate, CardId) ->
+    _ = maybe_initiate_parking_session:dispatch(#{
+        session_id => SessionId,
+        lot_id     => LotId,
+        plate      => Plate,
+        card_id    => CardId,
+        entered_at => simulate_clock:now_iso8601()
+    }),
+    ok.
+```
+
+### The Fix
+
+Pattern-match the dispatch result. The right choice depends on the
+caller:
+
+```erlang
+%% RIGHT — caller decides what to do with errors
+case maybe_initiate_X:dispatch(Cmd) of
+    {ok, _Version, _Events} -> ok;
+    {error, Reason}         -> logger:warning("dispatch failed: ~p", [Reason])
+end.
+
+%% ALSO RIGHT — let the process die on dispatch error
+%% Default for short-lived spawned workers (per-visit, per-request).
+%% proc_lib's crash handler logs to error_logger, making the failure
+%% visible without extra plumbing.
+{ok, _V, _Events} = maybe_initiate_X:dispatch(Cmd).
+```
+
+### The Rule
+
+> **The dispatch result IS the only error channel. Never `_ = dispatch(...)`.**
+> **Pattern-match. Log or crash on `{error, _}`.**
+
+Silent dispatch failures are the worst kind: the caller thinks
+everything is fine while the store stays empty. Eventual-consistency
+flows that depend on the event then look like they have a "race
+condition" or a "delivery bug" — but the bug is upstream in a
+discarded return value.
+
+This is the application-side mirror of the Feedback pattern (see
+`guides/INTEGRATION_ACTORS.md` § Session-Level Consistency). The same
+return shape that carries `{ok, Version, Events}` (or
+`{ok, Version, Events, State}` from `dispatch_with_state/1`) is also
+the error channel. Throwing it away means throwing away both the
+canonical answer AND the canonical error report.
+
+The same rule applies to integration-layer dispatches into evoq
+adapters, to `reckon_evoq_adapter:append_events/4` returns, and to any
+other "the result IS the answer" API across the family.
+
+---
+
 *We burned these demons so you don't have to. Keep the fire going.* 🔥🗝️🔥

@@ -91,6 +91,34 @@ If you can't decide, default to Layer 2 (be paranoid about the
 grab-bag). It's easier to merge a small service into the daemon
 later than to extract a heavy plugin under load.
 
+### Format contracts belong in the protocol layer
+
+The above criteria cut by *capability*. Cut criteria also exist for
+*types* and *formats*: identifier shapes, envelope layouts, snapshot
+serialization, subscription protocol, anything with a regex or schema
+contract. These belong in the **protocol layer** (`reckon-gater`), not
+the implementation layer (`reckon-db`).
+
+The reason: an adapter that doesn't run the storage backend (e.g.
+`reckon-evoq`) needs to validate ids without dragging the storage
+backend in as a dep. A gateway client (e.g. `reckon-lazy`, or any future
+write-only sender) needs to mint ids without depending on the storage.
+Both are wrong if the format definition lives in the storage layer.
+
+**Symptom of getting this wrong:** an upstream type module imports a
+downstream storage module to do basic shape checks. If you see
+`reckon_db_*` referenced from `reckon_evoq_*`'s code, the cut is in the
+wrong place — the type moved out of layer.
+
+**Worked example** (2026-05-26): the user-stream-id regex
+`^[a-z]{1,32}-[a-f0-9]{32}$` and its `validate/1` + `new/1` helpers
+lived in `reckon_db_stream_id` (inside the storage backend). Anyone
+wanting to validate or mint stream ids without running reckon-db
+couldn't. Relocated to `reckon_gater_stream_id` in reckon-gater 2.2.0;
+`reckon-db` 3.0.0 calls into it. Both storage and the adapter (and any
+future client) now reach the same module without coupling to a specific
+implementation.
+
 ## The contract
 
 Every Layer-2 service:

@@ -56,6 +56,7 @@
 | 46 | No Subscription Replay on Reconnect | QUIC reconnect doesn't re-send SUBSCRIBE — gateway loses all subscriptions | 2026-03-26 |
 | 47 | Eager Peer Connection Explosion | Persistent peer_system per discovered peer → 692 handlers on 4 nodes | 2026-03-26 |
 | **48** | **DEBUG Logging on Critical Failure Paths** | **"Found 0 subscribers" at DEBUG level — failures invisible in production** | **2026-03-26** |
+| **49** | **Discarding `evoq_dispatcher:dispatch/2`'s Return Value** | **`_ = dispatch(...)` throws away the only error channel — events vanish silently** | **2026-05-26** |
 
 ---
 
@@ -87,7 +88,7 @@ Demons #2, #4, #5, #9. Errors in modeling aggregate lifecycles, parent-child rel
 
 ### [ANTIPATTERNS_EVENT_SOURCING.md](ANTIPATTERNS_EVENT_SOURCING.md) — Aggregates, Events, Envelopes
 
-Demons #10, #23, #33, #34, #37, #40, **#41**. Aggregate callback order, event record handling, evoq+reckondb requirements, map key types, envelope flattening, envelope field extraction, and **reading from read models during event flow (THE cardinal sin)**.
+Demons #10, #23, #33, #34, #37, #40, **#41**, #49. Aggregate callback order, event record handling, evoq+reckondb requirements, map key types, envelope flattening, envelope field extraction, **reading from read models during event flow (THE cardinal sin)**, and discarding `evoq_dispatcher:dispatch/2`'s return value (the only error channel).
 
 ### [ANTIPATTERNS_PROJECTIONS.md](ANTIPATTERNS_PROJECTIONS.md) — Projections & Read Models
 
