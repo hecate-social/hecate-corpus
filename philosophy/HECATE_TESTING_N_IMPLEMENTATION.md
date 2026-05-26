@@ -1,8 +1,15 @@
+---
+title: HECATE_TnI
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # HECATE_TnI — Testing & Implementation
 
 *Build it right.*
 
-**Phase 3 of [HECATE_ALC](HECATE_ALC.md)**
+**Phase 3 of [HECATE_ALC](alc/README.md)**
 
 ---
 
@@ -236,7 +243,7 @@ Before merging, verify:
 - [ ] Desk structure matches CODEGEN template
 - [ ] Tests exist and pass
 - [ ] Dialyzer clean
-- [ ] No antipatterns (check [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md))
+- [ ] No antipatterns (check [antipatterns/INDEX.md](../skills/antipatterns/INDEX.md))
 
 ---
 

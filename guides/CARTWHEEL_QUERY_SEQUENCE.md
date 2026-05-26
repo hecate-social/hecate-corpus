@@ -1,3 +1,10 @@
+---
+title: "Division Architecture: Query Sequence (QRY)"
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Division Architecture: Query Sequence (QRY)
 
 > *Note: "Cartwheel" is the historical name for what is now called "Division Architecture".*

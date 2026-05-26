@@ -1,3 +1,10 @@
+---
+title: "Division Architecture: Write Sequence (CMD)"
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Division Architecture: Write Sequence (CMD)
 
 > *Note: "Cartwheel" is the historical name for what is now called "Division Architecture".*

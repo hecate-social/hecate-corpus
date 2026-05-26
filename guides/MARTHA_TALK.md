@@ -1,3 +1,10 @@
+---
+title: "Meet Martha: Your AI-Powered Software Development Guide"
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Meet Martha: Your AI-Powered Software Development Guide
 
 _A talk about how Martha transforms the way you build software._
@@ -50,7 +57,7 @@ You start with a conversation. Martha's **Oracle** -- powered by your local LLM 
 - Who are the users?
 - What are the key workflows?
 
-From this conversation, Martha produces a **venture brief** -- the seed from which everything grows.
+From this conversation, Martha produces a **domain brief** -- the seed from which everything grows.
 
 ### Phase 2: Discover
 
@@ -120,7 +127,7 @@ The protocol:
 5. **Build forward** -- Each decision narrows the option space for the next.
 6. **Produce an artifact** -- The output is structured data, not prose.
 
-This creates a **decision cascade**. Your venture name constrains your discovery scope. Your discovered divisions constrain what needs designing. Your design constrains your planning. Your plan constrains what gets generated.
+This creates a **decision cascade**. Your domain name constrains your discovery scope. Your discovered divisions constrain what needs designing. Your design constrains your planning. Your plan constrains what gets generated.
 
 By the time you reach code generation, most decisions are already made. The code practically writes itself -- because the architecture was decided through structured, recorded conversations.
 
@@ -140,7 +147,7 @@ The architecture:
 
 - **AI** -- Connects to your local LLMs through hecate-daemon's serve_llm. Ollama, llama.cpp, whatever you run locally. No API keys. No cloud calls.
 
-- **Knowledge Base** -- Martha loads domain expertise from `hecate-agents` -- a curated knowledge base of architecture patterns, naming conventions, anti-patterns, and code generation templates.
+- **Knowledge Base** -- Martha loads domain expertise from `hecate-corpus` -- a curated knowledge base of architecture patterns, naming conventions, anti-patterns, and code generation templates.
 
 - **Zero-touch install** -- Install Martha from the Hecate appstore. One click. The container starts, the socket appears, hecate-web discovers it automatically.
 
@@ -166,7 +173,7 @@ Software isn't "done" when you ship v1. Martha's lifecycle wheel captures this t
 
 ### Privacy First
 
-Your venture vision, your domain events, your architectural decisions -- none of it leaves your machine. Martha runs locally. The AI runs locally. The event store is a local file. You own everything.
+Your domain vision, your domain events, your architectural decisions -- none of it leaves your machine. Martha runs locally. The AI runs locally. The event store is a local file. You own everything.
 
 ---
 

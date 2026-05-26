@@ -1,3 +1,10 @@
+---
+title: Hecate Examples Library
+layer: example
+audience: [agent, human]
+stage: stable
+---
+
 # Hecate Examples Library
 
 *Canonical examples for training and documentation.*

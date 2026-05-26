@@ -1,4 +1,11 @@
-# AVAILABLE_ACTIONS_IN_PROJECTIONS.md --- Frontends Are Pure Views
+---
+title: Frontends Are Pure Views
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
+# Frontends Are Pure Views
 
 *Projections provide available actions, not just status labels. Frontends render --- they never decide.*
 
@@ -236,7 +243,7 @@ This principle applies to ANY domain, not just phases:
 | Plugin Lifecycle | `INSTALLED` | `["activate", "uninstall"]` |
 | License | `ACTIVE` | `["suspend", "revoke"]` |
 | User Account | `VERIFIED` | `["promote", "suspend"]` |
-| Venture | `DISCOVERING` | `["pause", "advance_to_design"]` |
+| Domain | `DISCOVERING` | `["pause", "advance_to_design"]` |
 
 Every domain with a state machine benefits. The pattern is universal.
 

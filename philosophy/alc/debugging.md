@@ -1,8 +1,15 @@
+---
+title: "ALC: Debugging -- Test and Verify"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # ALC: Debugging -- Test and Verify
 
-*Process 5 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 5 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -18,9 +25,9 @@ Debugging covers:
 - Code review for correctness
 
 Debugging does **not** cover:
-- Writing new business logic (that is [Crafting](HECATE_ALC_CRAFTING.md))
-- Restructuring code (that is [Refactoring](HECATE_ALC_REFACTORING.md))
-- Responding to production incidents (that is [Rescue](HECATE_ALC_RESCUE.md))
+- Writing new business logic (that is [Crafting](crafting.md))
+- Restructuring code (that is [Refactoring](refactoring.md))
+- Responding to production incidents (that is [Rescue](rescue.md))
 
 **Debugging proves the code works. If it doesn't, debugging finds out why.**
 
@@ -120,7 +127,7 @@ pending --> active --> paused --> completed
 
 ### 1. Write Tests for Crafted Code
 
-After [Crafting](HECATE_ALC_CRAFTING.md) produces desks, debugging writes the tests:
+After [Crafting](crafting.md) produces desks, debugging writes the tests:
 
 For each desk:
 - [ ] Unit tests for handler (happy path + error cases)
@@ -152,7 +159,7 @@ When tests fail or unexpected behavior is found:
 
 **Fix bugs at the source.** Do not add defensive code to handle "impossible" states. Do not wrap errors to make them go away. Find the root cause and fix it there.
 
-If the root cause is structural (tangled code, wrong abstraction), open a [Refactoring](HECATE_ALC_REFACTORING.md) process.
+If the root cause is structural (tangled code, wrong abstraction), open a [Refactoring](refactoring.md) process.
 
 ### 4. Verify Acceptance Criteria
 
@@ -173,7 +180,7 @@ Before concluding debugging, review the code for correctness:
 - [ ] Desk structure matches CODEGEN template
 - [ ] Tests exist and pass
 - [ ] Dialyzer clean
-- [ ] No antipatterns (check [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md))
+- [ ] No antipatterns (check [antipatterns/INDEX.md](../../skills/antipatterns/INDEX.md))
 - [ ] Evoq callback argument order correct (State first, Payload second)
 - [ ] Event names use business verbs, not CRUD verbs
 - [ ] Bit flags used for aggregate status fields
@@ -199,7 +206,7 @@ Before concluding debugging, review the code for correctness:
 
 ## Entry Checklist (Before Opening Debugging)
 
-- [ ] [Crafting](HECATE_ALC_CRAFTING.md) concluded or sufficient desks implemented to test
+- [ ] [Crafting](crafting.md) concluded or sufficient desks implemented to test
 - [ ] Code compiles cleanly (debugging tests code, not syntax errors)
 - [ ] Test infrastructure available (test databases, mocks, fixtures)
 
@@ -213,7 +220,7 @@ Before concluding debugging, review the code for correctness:
 - [ ] Dialyzer clean
 - [ ] Code review checklist completed
 - [ ] No known defects remaining (or explicitly deferred with documentation)
-- [ ] Ready for [Deployment](HECATE_ALC_DEPLOYMENT.md)
+- [ ] Ready for [Deployment](deployment.md)
 
 ---
 
@@ -234,11 +241,11 @@ Before concluding debugging, review the code for correctness:
 
 ## Related
 
-- [Crafting](HECATE_ALC_CRAFTING.md) -- Produces the code that debugging verifies
-- [Refactoring](HECATE_ALC_REFACTORING.md) -- When debugging reveals structural problems
-- [Deployment](HECATE_ALC_DEPLOYMENT.md) -- Receives verified code from debugging
-- [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md) -- What to look for during code review
-- [Walking Skeleton Doctrine](HECATE_WALKING_SKELETON.md) -- Verify the skeleton walks before adding features
+- [Crafting](crafting.md) -- Produces the code that debugging verifies
+- [Refactoring](refactoring.md) -- When debugging reveals structural problems
+- [Deployment](deployment.md) -- Receives verified code from debugging
+- [antipatterns/INDEX.md](../../skills/antipatterns/INDEX.md) -- What to look for during code review
+- [Walking Skeleton Doctrine](../HECATE_WALKING_SKELETON.md) -- Verify the skeleton walks before adding features
 
 ---
 

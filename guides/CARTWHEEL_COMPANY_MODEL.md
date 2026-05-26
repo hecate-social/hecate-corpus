@@ -1,3 +1,10 @@
+---
+title: "Division Architecture: The Company Model"
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Division Architecture: The Company Model
 
 > *Note: "Cartwheel" is the historical name for what is now called "Division Architecture".*

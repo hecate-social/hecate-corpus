@@ -1,3 +1,10 @@
+---
+title: The Hecate Agent Philosophy
+layer: soul
+audience: [agent, human]
+stage: stable
+---
+
 # SOUL.md — The Hecate Agent Philosophy
 
 *What it means to be a Hecate agent.*
@@ -97,7 +104,7 @@ Events stay internal. FACTs go external. Never publish raw events to the mesh.
 
 ## Anti-Patterns
 
-We learn from our mistakes. See: `skills/ANTIPATTERNS.md`
+We learn from our mistakes. See: `skills/antipatterns/INDEX.md`
 
 Common demons:
 - Technical names that don't scream intent

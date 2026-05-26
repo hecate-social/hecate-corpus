@@ -5,7 +5,7 @@ tier: T2
 phase: storming->planning
 context:
   - philosophy/CARTWHEEL.md
-  - philosophy/HECATE_VENTURE_LIFECYCLE.md
+  - philosophy/HECATE_DOMAIN_LIFECYCLE.md
   - skills/NAMING_CONVENTIONS.md
   - skills/codegen/erlang/EVOQ_BEHAVIOURS.md
   - examples/BIT_FLAGS_STATUS.md

@@ -1,4 +1,11 @@
-# ANTIPATTERNS.md — Demons We've Exorcised
+---
+title: Demons We've Exorcised
+layer: skill
+audience: [agent, human]
+stage: reversed
+---
+
+# antipatterns/INDEX.md — Demons We've Exorcised
 
 *Mistakes we've made and corrected. Read this. Don't repeat them.*
 
@@ -74,39 +81,39 @@ Unguided runtime debugging (checking processes, logs, curl) without a failing te
 
 ## Detail Files by Topic
 
-### [ANTIPATTERNS_NAMING.md](ANTIPATTERNS_NAMING.md) — Names That Don't Scream
+### [antipatterns/naming.md](naming.md) — Names That Don't Scream
 
 Demons #1, #13, #16, #17. Naming violations where module, event, or command names fail to communicate business intent.
 
-### [ANTIPATTERNS_STRUCTURE.md](ANTIPATTERNS_STRUCTURE.md) — Code Organization Violations
+### [antipatterns/structure.md](structure.md) — Code Organization Violations
 
 Demons #3, #6, #8, #14, #18, #25. Structural mistakes where code is organized by technical concern instead of business capability.
 
-### [ANTIPATTERNS_DOMAIN.md](ANTIPATTERNS_DOMAIN.md) — Domain Modeling Mistakes
+### [antipatterns/domain.md](domain.md) — Domain Modeling Mistakes
 
 Demons #2, #4, #5, #9. Errors in modeling aggregate lifecycles, parent-child relationships, and domain boundaries.
 
-### [ANTIPATTERNS_EVENT_SOURCING.md](ANTIPATTERNS_EVENT_SOURCING.md) — Aggregates, Events, Envelopes
+### [antipatterns/event_sourcing.md](event_sourcing.md) — Aggregates, Events, Envelopes
 
 Demons #10, #23, #33, #34, #37, #40, **#41**, #49. Aggregate callback order, event record handling, evoq+reckondb requirements, map key types, envelope flattening, envelope field extraction, **reading from read models during event flow (THE cardinal sin)**, and discarding `evoq_dispatcher:dispatch/2`'s return value (the only error channel).
 
-### [ANTIPATTERNS_PROJECTIONS.md](ANTIPATTERNS_PROJECTIONS.md) — Projections & Read Models
+### [antipatterns/projections.md](projections.md) — Projections & Read Models
 
 Demons #12, #22, #31, #32. Projection timing, manual event emission, inline projections, and PRJ/QRY separation.
 
-### [ANTIPATTERNS_INTEGRATION.md](ANTIPATTERNS_INTEGRATION.md) — Subscriptions, Messaging, Process Managers
+### [antipatterns/integration.md](integration.md) — Subscriptions, Messaging, Process Managers
 
 Demons #7, #11, #15, #24, #26, #39. pg vs mesh, hope acknowledgments, command IDs, subscription pipeline failures, emitter lifecycle, and bypassing evoq behaviours.
 
-### [ANTIPATTERNS_ERLANG.md](ANTIPATTERNS_ERLANG.md) — Erlang/OTP Gotchas
+### [antipatterns/erlang.md](erlang.md) — Erlang/OTP Gotchas
 
 Demons #19, #20, #21, #35, #38. esqlite3 return types and argument order, eager map defaults, gen_server self-call deadlocks, and emoji literals in SQL.
 
-### [ANTIPATTERNS_RELEASE.md](ANTIPATTERNS_RELEASE.md) — Release, Testing & Packaging
+### [antipatterns/release.md](release.md) — Release, Testing & Packaging
 
 Demons #27, #28, #29, #30, #36. Hardcoded IDs, missing tests, plugin discovery routes, version bumping, and hex packaging.
 
-### [ANTIPATTERNS_MESH_PUBSUB.md](ANTIPATTERNS_MESH_PUBSUB.md) — Mesh Pub/Sub: The 13-Bug Marathon
+### [antipatterns/mesh_pubsub.md](mesh_pubsub.md) — Mesh Pub/Sub: The 13-Bug Marathon
 
 Demons #42, #43, #44, #45, #46, #47, #48. Silent catch-alls, dual registries, payload wrapper assumptions, fire-once publishing, missing subscription replay, eager connection explosion, and invisible DEBUG logging. All from a single debugging session where one game announcement needed 13 fixes to cross the mesh.
 

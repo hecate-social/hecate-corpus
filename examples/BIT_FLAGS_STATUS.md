@@ -1,3 +1,10 @@
+---
+title: "Example: Bit Flag Status Fields"
+layer: example
+audience: [agent, human]
+stage: stable
+---
+
 # Example: Bit Flag Status Fields
 
 *Canonical example: Using integers as bit flags for aggregate status*

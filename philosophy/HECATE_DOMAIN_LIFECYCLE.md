@@ -1,4 +1,11 @@
-# The Venture Lifecycle — Process-Centric Architecture
+---
+title: The Domain Lifecycle
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
+# The Domain Lifecycle — Process-Centric Architecture
 
 _How Hecate models software development as a set of first-class processes._
 
@@ -26,7 +33,7 @@ If the answer is "they investigate, decide, produce, and hand off" — the model
 ### Hierarchy
 
 ```
-Venture (1)
+Domain (1)
   └── Division (N)        — one per bounded context
        └── Department (3)  — CMD, PRJ, QRY
             └── Desk (N)   — individual capability
@@ -36,8 +43,8 @@ Venture (1)
 
 | Term | What It Is | Old Term |
 |------|-----------|----------|
-| **Venture** | The overall business endeavor — a conglomerate of divisions | Torch |
-| **Division** | A specialist firm within the venture, responsible for one bounded context | Cartwheel / Company |
+| **Domain** | The overall business endeavor — a conglomerate of divisions | Venture, Torch |
+| **Division** | A specialist firm within the domain, responsible for one bounded context | Cartwheel / Company |
 | **Department** | CMD, PRJ, or QRY within a division | Department |
 | **Desk** | A single capability within a department (where work gets done) | Spoke |
 | **Dossier** | The aggregate — the folder of event slips passing through desks | Dossier |
@@ -63,15 +70,15 @@ Each division produces N apps following the department pattern:
 
 Hecate manages three fundamentally different lifecycle types. Each has its own guide process and its own rhythm.
 
-### 1. Venture Lifecycle (`guide_venture_lifecycle`)
+### 1. Domain Lifecycle (`guide_venture_lifecycle`)
 
-**Scope:** Per venture. **Duration:** Short inception, long-lived discovery.
+**Scope:** Per domain. **Duration:** Short inception, long-lived discovery.
 
-The venture has two processes:
+The domain has two processes:
 - `setup_venture` — short-lived, fire-and-done. Birth of the endeavor.
 - `discover_divisions` — long-lived, with `open/shelve/resume/conclude` lifecycle. Identifies bounded contexts.
 
-The venture orchestrates divisions. Once divisions are discovered, each follows its own ALC independently.
+The domain orchestrates divisions. Once divisions are discovered, each follows its own ALC independently.
 
 **Apps:**
 - CMD: `guide_venture_lifecycle`
@@ -131,7 +138,7 @@ There is no lifecycle protocol — the node is simply alive and responding to co
 
 ## Lifecycle Protocol
 
-Long-lived processes (venture discovery + planning + crafting) implement:
+Long-lived processes (domain discovery + planning + crafting) implement:
 
 ```
 Command:  initiate_{process}_v1   →  Event: {process}_initiated_v1
@@ -240,7 +247,7 @@ Each PM is a gen_server that subscribes to the source event and dispatches the t
 
 | Phase | Guided Conversation Produces |
 |-------|------------------------------|
-| `setup_venture` | Venture name + brief |
+| `setup_venture` | Domain name + brief |
 | `discover_divisions` | Division list with names, descriptions, boundary rationale |
 | `planning` | Aggregates, events, desk inventory, dependencies, sprint sequence |
 | `crafting` | Module generation, test strategy, release manifest |

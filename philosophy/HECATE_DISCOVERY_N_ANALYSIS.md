@@ -1,8 +1,15 @@
+---
+title: HECATE_DnA
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # HECATE_DnA — Discovery & Analysis
 
 *Understand the problem before solving it.*
 
-**Phase 1 of [HECATE_ALC](HECATE_ALC.md)**
+**Phase 1 of [HECATE_ALC](alc/README.md)**
 
 ---
 

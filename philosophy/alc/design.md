@@ -1,8 +1,15 @@
+---
+title: "ALC: Design -- Discover and Model the Domain"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # ALC: Design -- Discover and Model the Domain
 
-*Process 1 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 1 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -61,7 +68,7 @@ Command:  conclude_design_v1   -->  Event: design_concluded_v1
 | **QRY+PRJ App** | `query_designs` |
 | **Aggregate** | `design` |
 | **Stream Pattern** | `design-{division_id}` |
-| **Cardinality** | N per venture (one per division) |
+| **Cardinality** | N per domain (one per division) |
 
 ---
 
@@ -84,7 +91,7 @@ Questions to ask:
 
 ### 2. Domain Exploration (The Dossier Questions)
 
-Apply the [Dossier Principle](DDD.md). For each domain concept, ask:
+Apply the [Dossier Principle](../DDD.md). For each domain concept, ask:
 
 | Question | Reveals |
 |----------|---------|
@@ -200,7 +207,7 @@ This makes the ALC cycle circular, not linear. A design flaw discovered in produ
 
 ## Entry Checklist (Before Opening Design)
 
-- [ ] Venture exists (`venture_setup_v1` recorded)
+- [ ] Domain exists (`venture_setup_v1` recorded)
 - [ ] Division discovered (`division_discovered_v1` recorded)
 - [ ] Scope is roughly defined
 - [ ] Access to stakeholders or domain experts (if needed)
@@ -246,7 +253,7 @@ Design is driven by a guided conversation that produces structured artifacts, no
 
 **Design conversation produces:** aggregates, events, stream patterns, status flags.
 
-These outputs become the input to [HECATE_ALC_PLANNING.md](HECATE_ALC_PLANNING.md).
+These outputs become the input to [alc/planning.md](planning.md).
 
 ---
 

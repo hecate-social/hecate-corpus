@@ -59,7 +59,7 @@
   <!-- hecate-marthad namespace -->
   <rect x="700" y="242" width="300" height="55" rx="3" fill="#292524" stroke="#f43f5e" stroke-width="1"/>
   <text x="850" y="259" fill="#fca5a5" font-size="10" text-anchor="middle">hecate-marthad/</text>
-  <text x="850" y="275" fill="#64748b" font-size="8" text-anchor="middle">sockets/api.sock | hecate-agents/ (knowledge)</text>
+  <text x="850" y="275" fill="#64748b" font-size="8" text-anchor="middle">sockets/api.sock | hecate-corpus/ (knowledge)</text>
   <text x="850" y="289" fill="#64748b" font-size="8" text-anchor="middle">sqlite/ reckon-db/ run/ connectors/</text>
 
   <!-- ========== systemd boundary ========== -->
@@ -100,7 +100,7 @@
   <rect x="635" y="450" width="210" height="20" rx="3" fill="#5c0a1e" stroke="#e11d48" stroke-width="1"/>
   <text x="740" y="464" fill="#fda4af" font-size="10" text-anchor="middle">SQLite Read Models</text>
   <rect x="635" y="475" width="210" height="20" rx="3" fill="#5c0a1e" stroke="#e11d48" stroke-width="1"/>
-  <text x="740" y="489" fill="#fda4af" font-size="10" text-anchor="middle">hecate-agents/ (knowledge)</text>
+  <text x="740" y="489" fill="#fda4af" font-size="10" text-anchor="middle">hecate-corpus/ (knowledge)</text>
 
   <!-- ========== Frontend containers ========== -->
   <!-- Note: frontends are stateless, they connect TO daemon sockets -->

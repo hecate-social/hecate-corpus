@@ -1,6 +1,13 @@
+---
+title: Erlang Code Naming Conventions
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # CODEGEN_ERLANG_NAMING.md — Erlang Code Naming Conventions
 
-_Strict naming rules for all components in the Venture/Division/Desk architecture._
+_Strict naming rules for all components in the Domain/Division/Desk architecture._
 
 **Target:** Erlang/OTP with `reckon_evoq`
 
@@ -49,13 +56,13 @@ A module named `get_venture` is ambiguous. Get it how? By name? By status?
 
 | Module Name | What It Screams |
 |-------------|----------------|
-| `get_venture_by_id` | "I fetch one venture by its primary key" |
-| `get_venture_by_name` | "I fetch one venture by its unique name" |
-| `get_active_venture` | "I fetch the currently active venture" |
+| `get_venture_by_id` | "I fetch one domain by its primary key" |
+| `get_venture_by_name` | "I fetch one domain by its unique name" |
+| `get_active_venture` | "I fetch the currently active domain" |
 
 ### Rule 2: No Raw `list_{aggregates}` — Use `get_{aggregates}_page`
 
-A module named `list_ventures` sounds like it returns ALL ventures. That's a scaling time bomb.
+A module named `list_ventures` sounds like it returns ALL domains. That's a scaling time bomb.
 
 **Every list query MUST be paged by default.**
 
@@ -69,9 +76,9 @@ A module named `list_ventures` sounds like it returns ALL ventures. That's a sca
 
 | Module Name | What It Screams |
 |-------------|----------------|
-| `get_divisions_by_venture` | "I return divisions belonging to a specific venture" |
+| `get_divisions_by_venture` | "I return divisions belonging to a specific domain" |
 | `get_findings_by_division` | "I return findings for a specific division" |
-| `get_ventures_by_status` | "I return ventures matching a status filter" |
+| `get_ventures_by_status` | "I return domains matching a status filter" |
 
 ### Complete QRY Naming Convention
 
@@ -89,9 +96,9 @@ A module named `list_ventures` sounds like it returns ALL ventures. That's a sca
 
 | Module | Route | HTTP |
 |--------|-------|------|
-| `get_venture_by_id_api` | `/api/ventures/:venture_id` | GET |
-| `get_active_venture_api` | `/api/venture` | GET |
-| `get_ventures_page_api` | `/api/ventures` | GET |
+| `get_venture_by_id_api` | `/api/domains/:venture_id` | GET |
+| `get_active_venture_api` | `/api/domain` | GET |
+| `get_ventures_page_api` | `/api/domains` | GET |
 | `get_division_by_id_api` | `/api/divisions/:division_id` | GET |
 | `get_divisions_page_api` | `/api/divisions` | GET |
 

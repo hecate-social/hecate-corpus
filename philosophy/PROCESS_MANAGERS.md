@@ -1,9 +1,16 @@
+---
+title: "Example: Process Manager Patterns"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # Example: Process Manager Patterns
 
 *Canonical example: Cross-domain coordination without tight coupling*
 
 > **Note:** This document has been updated to use current terminology (2026-02-10).
-> `torch` -> `venture`, `cartwheel` -> `division`, `spoke` -> `desk`.
+> `torch` -> `domain`, `cartwheel` -> `division`, `spoke` -> `desk`.
 
 ---
 
@@ -156,7 +163,7 @@ design_division/src/                                    # TARGET domain
 - PM is a consumer of source events, producer of target commands.
 - Source domain shouldn't know who reacts to its events.
 
-> **Decision recorded 2026-03-12, reinforced 2026-05-24.** Earlier versions of this doc placed the PM inside the target desk. That guidance was reversed. The sibling-slice pattern is canonical. See [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks).
+> **Decision recorded 2026-03-12, reinforced 2026-05-24.** Earlier versions of this doc placed the PM inside the target desk. That guidance was reversed. The sibling-slice pattern is canonical. See [antipatterns/structure.md Demon 18](../skills/antipatterns/structure.md#-demon-18-process-managers-inside-desks).
 
 ---
 
@@ -354,14 +361,14 @@ PMs are first-class siblings of desks under the domain supervisor. Each PM slice
 │      ↓                                                          │
 │  Handler: maybe_discover_division                               │
 │      ↓                                                          │
-│  Event: division_discovered_v1 → stored in Venture stream       │
+│  Event: division_discovered_v1 → stored in Domain stream       │
 │      ↓                                                          │
 │  Emitter: division_discovered_v1_to_mesh → publishes FACT       │
 └─────────────────────────────────────────────────────────────────┘
                                 ↓
                     ════════════════════════════
                          MESH (loose coupling)
-                         Topic: hecate.venture.division_discovered
+                         Topic: hecate.domain.division_discovered
                     ════════════════════════════
                                 ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -417,4 +424,4 @@ This example teaches:
 - Flow from source event to target command
 
 *Date: 2026-02-08*
-*Origin: Hecate Venture → Division integration*
+*Origin: Hecate Domain → Division integration*

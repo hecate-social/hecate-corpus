@@ -1,3 +1,10 @@
+---
+title: Names That Reveal Intent
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # SCREAMING_ARCHITECTURE.md — Names That Reveal Intent
 
 *Your code structure should scream what the system does, not what frameworks you used.*
@@ -299,7 +306,7 @@ It should NOT scream:
 
 - [VERTICAL_SLICING.md](VERTICAL_SLICING.md) — Features live together
 - [CARTWHEEL.md](CARTWHEEL.md) — The Division Architecture
-- [../skills/ANTIPATTERNS.md](../skills/ANTIPATTERNS.md) — Naming demons to avoid
+- [../skills/antipatterns/INDEX.md](../skills/antipatterns/INDEX.md) — Naming demons to avoid
 
 ---
 

@@ -1,3 +1,10 @@
+---
+title: Martha Plugin Architecture
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Martha Plugin Architecture
 
 _How Martha implements the ALC as a hecate-web plugin._
@@ -9,7 +16,7 @@ _How Martha implements the ALC as a hecate-web plugin._
 
 ## What Is Martha?
 
-Martha is the Hecate plugin that implements the Application Lifecycle (ALC). She guides users through venture setup, division discovery, and the eight-process development cycle -- from design through rescue.
+Martha is the Hecate plugin that implements the Application Lifecycle (ALC). She guides users through domain setup, division discovery, and the eight-process development cycle -- from design through rescue.
 
 Martha follows the standard Hecate plugin model: a daemon (`hecate-marthad`) communicating via Unix socket, a frontend (`hecate-marthaw`) compiled to an ES module, and CLI subcommands.
 
@@ -29,9 +36,9 @@ hecate-martha/
       sys.config
       vm.args
     apps/
-      guide_venture_lifecycle/       # CMD: venture + discovery lifecycle
+      guide_venture_lifecycle/       # CMD: domain + discovery lifecycle
       guide_division_alc/            # CMD: division 8-process lifecycle
-      query_venture_lifecycle/       # QRY+PRJ: venture read models
+      query_venture_lifecycle/       # QRY+PRJ: domain read models
       query_division_alc/            # QRY+PRJ: division read models
     src/                             # App shell: Cowboy, socket, health, manifest
     priv/static/                     # Frontend bundle (component.js)
@@ -49,13 +56,13 @@ hecate-martha/
 
 ```
 ~/.hecate/hecate-marthad/
-  sqlite/            # Division/venture read models
+  sqlite/            # Division/domain read models
   reckon-db/         # Event store data (martha_store)
   sockets/
     api.sock         # Discovered by hecate-web plugin watcher
   run/
   connectors/
-  hecate-agents/     # AI knowledge base (cloned at install)
+  hecate-corpus/     # AI knowledge base (cloned at install)
 ```
 
 Socket path: `~/.hecate/hecate-marthad/sockets/api.sock`
@@ -71,7 +78,7 @@ Both CMD apps (`guide_venture_lifecycle`, `guide_division_alc`) write to this st
 
 | Stream Pattern | Owner | Example |
 |---------------|-------|---------|
-| `venture-{id}` | `guide_venture_lifecycle` | `venture-abc123` |
+| `domain-{id}` | `guide_venture_lifecycle` | `domain-abc123` |
 | `division-{id}` | `guide_division_alc` | `division-def456` |
 
 The store is started by `hecate_marthad_app` (the app shell), not by domain apps. Domain supervisors only manage their own emitters, listeners, and process managers.
@@ -84,17 +91,17 @@ The store is started by `hecate_marthad_app` (the app shell), not by domain apps
 
 The frontend is organized by **ALC task**, not by technical concern. Each vertical slice contains its own component, store, and types. No `components/`, `stores/`, `utils/` directories.
 
-### Venture-Level Slices
+### Domain-Level Slices
 
 | Slice | ALC Task | What It Does |
 |-------|----------|--------------|
-| `compose_vision/` | Setup Venture | Initiate venture, AI-guided vision creation (Oracle conversation + live preview), submit vision |
+| `compose_vision/` | Setup Domain | Initiate domain, AI-guided vision creation (Oracle conversation + live preview), submit vision |
 | `brainstorm_venture_events/` | Discovery (chaotic) | Timeboxed high-octane event brainstorming -- free-form domain event stickies on a timeline |
 | `storm_venture_big_picture/` | Discovery (structured) | Big Picture Event Storming organization: stack, groom, cluster, name, map, promote to divisions |
 
 **On the brainstorm/Big Picture split:** Event Storming's Big Picture technique starts with a chaotic brainstorming phase (posting stickies) and then moves through structured organization (stacking duplicates, grooming, clustering into bounded contexts, naming, context mapping, and finally promoting clusters to divisions). The brainstorm is the high-energy creative burst; the Big Picture phases are the methodical distillation.
 
-Both slices share the same underlying data model (stickies, stacks, clusters, fact arrows) via the venture aggregate. The `brainstorm_venture_events` slice manages the `storm` phase; `storm_venture_big_picture` manages `stack` through `promoted`.
+Both slices share the same underlying data model (stickies, stacks, clusters, fact arrows) via the domain aggregate. The `brainstorm_venture_events` slice manages the `storm` phase; `storm_venture_big_picture` manages `stack` through `promoted`.
 
 ### Division ALC Slices (8 processes)
 
@@ -113,7 +120,7 @@ Both slices share the same underlying data model (stickies, stacks, clusters, fa
 
 | Slice | Purpose |
 |-------|---------|
-| `guide_venture/` | Venture header, division list, manual division identification, phase progress, lifecycle controls |
+| `guide_venture/` | Domain header, division list, manual division identification, phase progress, lifecycle controls |
 | `shared/` | TaskCard, AIAssistPanel, EventStreamViewer, ModelSelector |
 
 ### Slice Anatomy
@@ -170,14 +177,14 @@ The daemon is an Erlang/OTP umbrella with apps mirroring the ALC:
 
 | App | Manages |
 |-----|---------|
-| `guide_venture_lifecycle` | Venture initiation, vision, Big Picture storm, division discovery |
+| `guide_venture_lifecycle` | Domain initiation, vision, Big Picture storm, division discovery |
 | `guide_division_alc` | All 8 division processes: design through rescue |
 
 ### QRY+PRJ Apps (Data-Centric)
 
 | App | Read Models |
 |-----|-------------|
-| `query_venture_lifecycle` | Ventures, storm sessions, stickies, clusters, discovered divisions |
+| `query_venture_lifecycle` | Domains, storm sessions, stickies, clusters, discovered divisions |
 | `query_division_alc` | Divisions, aggregates, events, desks, deps, modules, tests, releases, incidents |
 
 ### API Shell
@@ -197,24 +204,24 @@ The daemon is an Erlang/OTP umbrella with apps mirroring the ALC:
 
 ---
 
-## Venture-to-Division Bridge
+## Domain-to-Division Bridge
 
 The two CMD apps (`guide_venture_lifecycle` and `guide_division_alc`) are **completely decoupled**. They share `martha_store` but use separate event streams and have zero direct coupling.
 
 ### How Divisions Are Discovered
 
-Two paths produce `division_identified_v1` in the venture aggregate:
+Two paths produce `division_identified_v1` in the domain aggregate:
 
 | Path | Command | Context |
 |------|---------|---------|
 | Manual | `identify_division_v1` | User manually names a division during discovery |
 | Storm promotion | `promote_event_cluster_v1` | Promotes a named cluster from Big Picture (emits TWO events atomically: `event_cluster_promoted_v1` + `division_identified_v1`) |
 
-Both paths add to the venture's `discovered_divisions` map (`context_name => division_id`).
+Both paths add to the domain's `discovered_divisions` map (`context_name => division_id`).
 
 ### Missing Process Manager
 
-Currently, **no process manager bridges** the venture lifecycle to division ALC. When `division_identified_v1` fires, nothing automatically creates the division aggregate in `guide_division_alc`.
+Currently, **no process manager bridges** the domain lifecycle to division ALC. When `division_identified_v1` fires, nothing automatically creates the division aggregate in `guide_division_alc`.
 
 This bridge is needed:
 
@@ -240,9 +247,9 @@ apps/guide_division_alc/src/
     on_division_identified_initiate_division_sup.erl
 ```
 
-### Big Picture Storm Phases (Venture Aggregate)
+### Big Picture Storm Phases (Domain Aggregate)
 
-The storm runs as a linear state machine within the venture aggregate:
+The storm runs as a linear state machine within the domain aggregate:
 
 ```
 storm ──► stack ──► groom ──► cluster ──► name ──► map ──► promoted
@@ -267,7 +274,7 @@ Phase transitions are strictly linear via `advance_storm_phase_v1`. Lifecycle co
 Martha's frontend component receives an `api` prop from hecate-web that routes to the Martha daemon socket. But Martha also needs capabilities from the main hecate-daemon:
 
 - **LLM streaming** -- AI-assisted vision, event storming, domain expertise
-- **Agent prompts** -- Loaded from hecate-agents knowledge base
+- **Agent prompts** -- Loaded from hecate-corpus knowledge base
 
 This flows through BEAM clustering (same cookie, same network):
 
@@ -295,7 +302,7 @@ Martha is being extracted from hecate-web's built-in DevOps studio. The extracti
 1. **Frontend**: Move 13 components + 1 store + types from `hecate-web/src/lib/` to `hecate-marthaw/src/lib/`, restructured as vertical slices
 2. **Backend**: Move 4 Erlang apps from `hecate-daemon/apps/` to `hecate-marthad/apps/`
 3. **Store rename**: `dev_studio_store` becomes `martha_store`
-4. **API routes**: Extract venture/division routes from `hecate_api_routes.erl` to Martha's own API handler
+4. **API routes**: Extract domain/division routes from `hecate_api_routes.erl` to Martha's own API handler
 5. **Decouple**: Remove Martha-specific error codes from shared `api.ts`, Martha-specific types from shared `types.ts`, Martha-specific StatusBar logic
 6. **Add bridge PM**: Implement `on_division_identified_initiate_division` process manager
 

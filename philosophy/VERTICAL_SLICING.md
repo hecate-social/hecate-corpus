@@ -1,3 +1,10 @@
+---
+title: Features Live Together
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # VERTICAL_SLICING.md — Features Live Together
 
 *Why we organize by business capability, not technical layer.*

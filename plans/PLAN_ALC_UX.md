@@ -1,3 +1,10 @@
+---
+title: "Plan: Hecate ALC User Experience"
+layer: plan
+audience: [human]
+stage: draft
+---
+
 # Plan: Hecate ALC User Experience
 
 ## Status: DRAFT - Awaiting Approval
@@ -9,7 +16,7 @@
 
 ## Overview
 
-Design a modal TUI experience for managing Ventures (business endeavors) and Divisions (bounded contexts) through the Agent Lifecycle phases: Discovery & Analysis (DnA), Architecture & Planning (AnP), Testing & Implementation (TnI), and Deployment & Operations (DnO).
+Design a modal TUI experience for managing Domains (business endeavors) and Divisions (bounded contexts) through the Agent Lifecycle phases: Discovery & Analysis (DnA), Architecture & Planning (AnP), Testing & Implementation (TnI), and Deployment & Operations (DnO).
 
 ---
 
@@ -21,16 +28,16 @@ Three distinct modes with progressive context:
 ┌──────────────────────────────────────────────────────────────────┐
 │                         CHAT MODE                                 │
 │  Default, lightweight, no project context                         │
-│  Entry: TUI startup (no venture detected)                        │
-│  Exit: /venture, /ventures                                       │
+│  Entry: TUI startup (no domain detected)                        │
+│  Exit: /domain, /domains                                       │
 └──────────────────────────────────────────────────────────────────┘
                               │
-                    /venture or /ventures
+                    /domain or /domains
                               ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                       VENTURE MODE                                │
-│  Project-level context, venture selected but no active division  │
-│  Entry: Select venture, or auto-detect from CWD                  │
+│                       DOMAIN MODE                                │
+│  Project-level context, domain selected but no active division  │
+│  Entry: Select domain, or auto-detect from CWD                  │
 │  Exit: /chat, Esc (to Chat) or /division (to Division)           │
 └──────────────────────────────────────────────────────────────────┘
                               │
@@ -40,7 +47,7 @@ Three distinct modes with progressive context:
 │                      DIVISION MODE                                │
 │  Active work unit, phase-specific behavior                        │
 │  Entry: Select or create division                                │
-│  Exit: /back (to Venture), /chat (to Chat)                       │
+│  Exit: /back (to Domain), /chat (to Chat)                       │
 │                                                                   │
 │  Phases: DnA ──► AnP ──► TnI ──► DnO                             │
 └──────────────────────────────────────────────────────────────────┘
@@ -48,18 +55,18 @@ Three distinct modes with progressive context:
 
 ### 1.1 Context Detection on Startup
 
-When TUI starts, detect venture from:
+When TUI starts, detect domain from:
 
-1. **Git remote URL** (preferred) - matches against known ventures
-2. **`.hecate/venture.json`** in CWD or parent directories (fallback)
+1. **Git remote URL** (preferred) - matches against known domains
+2. **`.hecate/domain.json`** in CWD or parent directories (fallback)
 3. **No match** - start in Chat mode
 
 ```
 $ cd ~/work/auth-system
 $ hecate-tui
 
-# Detects venture from git remote → auto-enters Venture mode
-# "Resuming venture: auth-system"
+# Detects domain from git remote → auto-enters Domain mode
+# "Resuming domain: auth-system"
 ```
 
 ---
@@ -79,13 +86,13 @@ $ hecate-tui
 └────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Venture Mode (Header Appears)
+### 2.2 Domain Mode (Header Appears)
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │ 🔥 auth-system                                                 │
 ├────────────────────────────────────────────────────────────────┤
-│ Hecate: This venture has 2 divisions. Which one?               │
+│ Hecate: This domain has 2 divisions. Which one?               │
 │                                                                │
 ├────────────────────────────────────────────────────────────────┤
 │ 🤖 claude-3.5-sonnet │ ● healthy │ [i] Insert                  │
@@ -115,15 +122,15 @@ Note: Model indicator moves to header in Division mode (phase-specific models).
 |------|---------|--------|
 | **Any** | `/help` | Show available commands for current mode |
 | **Any** | `/chat` | Return to Chat mode |
-| **Chat** | `/venture` | Show venture picker / create new |
-| **Chat** | `/ventures` | List all ventures |
-| **Venture** | `/venture` | Show current venture status |
-| **Venture** | `/division` | Show division picker / create new |
-| **Venture** | `/divisions` | List divisions in current venture |
-| **Venture** | `/settings` | Venture settings |
+| **Chat** | `/domain` | Show domain picker / create new |
+| **Chat** | `/domains` | List all domains |
+| **Domain** | `/domain` | Show current domain status |
+| **Domain** | `/division` | Show division picker / create new |
+| **Domain** | `/divisions` | List divisions in current domain |
+| **Domain** | `/settings` | Domain settings |
 | **Division** | `/division` | Show current division status |
 | **Division** | `/phase` | Show current phase / transition options |
-| **Division** | `/back` | Return to Venture mode |
+| **Division** | `/back` | Return to Domain mode |
 | **Division** | `/requirements` | View/edit requirements (DnA artifact) |
 | **Division** | `/decisions` | View/edit architectural decisions (AnP artifact) |
 | **Division** | `/artifacts` | List all phase artifacts |
@@ -132,12 +139,12 @@ Note: Model indicator moves to header in Division mode (phase-specific models).
 
 ```
 [Chat mode]
-> /ventures
+> /domains
   1. auth-system (3 divisions, AnP)
   2. billing-api (1 division, TnI)
 
 > 1
-[Enters Venture mode: auth-system]
+[Enters Domain mode: auth-system]
 
 > /divisions
   1. user-registration (AnP) ← active
@@ -148,7 +155,7 @@ Note: Model indicator moves to header in Division mode (phase-specific models).
 [Enters Division mode: rbac-permissions, DnA phase]
 
 > /back
-[Returns to Venture mode: auth-system]
+[Returns to Domain mode: auth-system]
 
 > /chat
 [Returns to Chat mode]
@@ -165,7 +172,7 @@ Note: Model indicator moves to header in Division mode (phase-specific models).
 │                    INCEPTION SPRINT                              │
 │           (Rigid, Gated, Full DnA→AnP→TnI→DnO cycle)            │
 │                                                                  │
-│   Trigger: New venture creation                                  │
+│   Trigger: New domain creation                                  │
 │   Goal: Establish foundation + Walking Skeleton                  │
 │   Output: One working vertical slice, all infra in place         │
 └─────────────────────────────────────────────────────────────────┘
@@ -412,7 +419,7 @@ auto_summarize = false     # auto-summarize or ask first
 
 ```
 github.com/your-org/
-├── auth-system/                    # META-REPO (the Venture)
+├── auth-system/                    # META-REPO (the Domain)
 │   ├── VISION.md
 │   ├── CONTEXT_MAP.md
 │   ├── context_map.yaml
@@ -420,7 +427,7 @@ github.com/your-org/
 │   ├── inception/
 │   │   └── EVENT_STORMING.md
 │   └── .hecate/
-│       └── venture.json
+│       └── domain.json
 │
 ├── auth-daemon/                    # CMD + QRY (Erlang umbrella)
 │   └── apps/
@@ -453,7 +460,7 @@ components:
 ### 7.3 context_map.yaml
 
 ```yaml
-venture: auth-system
+domain: auth-system
 bounded_contexts:
   - name: user-registration
     type: cmd
@@ -473,15 +480,15 @@ bounded_contexts:
 ## 8. Implementation Phases
 
 ### Phase 1: Modal Infrastructure ✅
-- [x] Mode state machine (Chat → Venture → Division) - `internal/alc/context.go`, `internal/alc/state.go`
+- [x] Mode state machine (Chat → Domain → Division) - `internal/alc/context.go`, `internal/alc/state.go`
 - [x] Header bar component (appears/disappears based on mode) - `internal/app/app.go:renderContextHeader()`
-- [x] Navigation commands (`/venture`, `/ventures`, `/division`, `/divisions`, `/back`, `/chat`) - `internal/commands/venture.go`
-- [x] Context detection on startup (git remote, `.hecate/venture.json`) - `internal/alc/detect.go`
+- [x] Navigation commands (`/domain`, `/domains`, `/division`, `/divisions`, `/back`, `/chat`) - `internal/commands/domain.go`
+- [x] Context detection on startup (git remote, `.hecate/domain.json`) - `internal/alc/detect.go`
 
-### Phase 2: Venture Management
-- [ ] Venture CRUD via daemon API
-- [ ] Venture picker UI
-- [ ] Venture status display
+### Phase 2: Domain Management
+- [ ] Domain CRUD via daemon API
+- [ ] Domain picker UI
+- [ ] Domain status display
 - [ ] Meta-repo initialization
 
 ### Phase 3: Division & Phase Management
@@ -512,7 +519,7 @@ bounded_contexts:
 ## 9. Open Questions
 
 1. **Kanban board implementation** - External tool (GitHub Projects, Trello) or built-in?
-2. **Multi-user collaboration** - How do multiple team members work on same venture?
+2. **Multi-user collaboration** - How do multiple team members work on same domain?
 3. **Offline support** - What happens when daemon is unreachable?
 4. **Phase artifact validation** - How strict should gating be in INCEPTION?
 
@@ -520,7 +527,7 @@ bounded_contexts:
 
 ## 10. References
 
-- hecate-agents/philosophy/DDD.md
-- hecate-agents/philosophy/CARTWHEEL.md
-- hecate-agents/philosophy/VERTICAL_SLICING.md
-- hecate-agents/skills/ANTIPATTERNS.md
+- hecate-corpus/philosophy/DDD.md
+- hecate-corpus/philosophy/CARTWHEEL.md
+- hecate-corpus/philosophy/VERTICAL_SLICING.md
+- hecate-corpus/skills/antipatterns/INDEX.md

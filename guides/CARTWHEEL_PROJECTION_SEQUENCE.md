@@ -1,3 +1,10 @@
+---
+title: "Division Architecture: Projection Sequence (PRJ)"
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Division Architecture: Projection Sequence (PRJ)
 
 > *Note: "Cartwheel" is the historical name for what is now called "Division Architecture".*

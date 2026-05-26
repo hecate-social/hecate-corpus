@@ -1,3 +1,10 @@
+---
+title: Plugin Security Model
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # Plugin Security Model
 
 _Tiered trust levels and session-scoped cookies for Hecate plugins._

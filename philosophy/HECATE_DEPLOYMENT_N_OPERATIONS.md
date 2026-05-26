@@ -1,8 +1,15 @@
+---
+title: HECATE_DnO
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # HECATE_DnO — Deployment & Operations
 
 *Ship it and keep it running.*
 
-**Phase 4 of [HECATE_ALC](HECATE_ALC.md)**
+**Phase 4 of [HECATE_ALC](alc/README.md)**
 
 ---
 

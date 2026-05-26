@@ -1,8 +1,15 @@
+---
+title: "Example: Mesh Integration Patterns"
+layer: example
+audience: [agent, human]
+stage: superseded
+---
+
 # Example: Mesh Integration Patterns
 
 *Canonical example: FACTS vs EVENTS, Emitters and Listeners*
 
-> **Layout note (2026-05-24):** This example places the listener INSIDE the desk it triggers (`initiate_division/subscribe_to_division_discovered.erl`). That layout is **superseded**. Current canon: listeners / PMs are **sibling slices** at the top of the target CMD app's `src/`, named `on_{src_event}_{action}_{target}/`, each with its own `_sup.erl` + gen_server. See [PROCESS_MANAGERS.md Location Rule](../philosophy/PROCESS_MANAGERS.md#location-rule) and [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks). The mesh subscribe / emit code itself is still correct — only the directory placement and supervision wiring change.
+> **Layout note (2026-05-24):** This example places the listener INSIDE the desk it triggers (`initiate_division/subscribe_to_division_discovered.erl`). That layout is **superseded**. Current canon: listeners / PMs are **sibling slices** at the top of the target CMD app's `src/`, named `on_{src_event}_{action}_{target}/`, each with its own `_sup.erl` + gen_server. See [PROCESS_MANAGERS.md Location Rule](../philosophy/PROCESS_MANAGERS.md#location-rule) and [antipatterns/structure.md Demon 18](../skills/antipatterns/structure.md#-demon-18-process-managers-inside-desks). The mesh subscribe / emit code itself is still correct — only the directory placement and supervision wiring change.
 
 ---
 
@@ -75,8 +82,8 @@ From `apps/discover_divisions/src/discover_division/division_discovered_v1_to_me
 ```erlang
 %%% @doc Emitter: Publish division_discovered_v1 events to mesh
 %%%
-%%% When a division is discovered within a venture, this emitter publishes
-%%% the fact to mesh topic `hecate.venture.division_discovered`.
+%%% When a division is discovered within a domain, this emitter publishes
+%%% the fact to mesh topic `hecate.domain.division_discovered`.
 %%%
 %%% The design_division service subscribes to this topic and initiates
 %%% the division's lifecycle.
@@ -89,7 +96,7 @@ From `apps/discover_divisions/src/discover_division/division_discovered_v1_to_me
 -export([start_link/0, emit/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
--define(TOPIC, <<"hecate.venture.division_discovered">>).
+-define(TOPIC, <<"hecate.domain.division_discovered">>).
 
 -record(state, {}).
 
@@ -127,7 +134,7 @@ do_emit(EventData) ->
     VentureId = maps:get(<<"venture_id">>, EventData, maps:get(venture_id, EventData, undefined)),
     DivisionId = maps:get(<<"division_id">>, EventData, maps:get(division_id, EventData, undefined)),
 
-    logger:debug("[emitter] Publishing division ~s for venture ~s", [DivisionId, VentureId]),
+    logger:debug("[emitter] Publishing division ~s for domain ~s", [DivisionId, VentureId]),
 
     %% Publish FACT to mesh
     case hecate_mesh_client:publish(?TOPIC, EventData) of
@@ -155,8 +162,8 @@ From `apps/design_division/src/initiate_division/subscribe_to_division_discovere
 ```erlang
 %%% @doc Listener: Subscribe to division_discovered facts from mesh
 %%%
-%%% Subscribes to mesh topic `hecate.venture.division_discovered`.
-%%% When a venture discovers a division, this listener receives the fact
+%%% Subscribes to mesh topic `hecate.domain.division_discovered`.
+%%% When a domain discovers a division, this listener receives the fact
 %%% and forwards it to the policy for processing.
 %%%
 %%% This listener lives in the initiate_division desk because its
@@ -170,7 +177,7 @@ From `apps/design_division/src/initiate_division/subscribe_to_division_discovere
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
--define(TOPIC, <<"hecate.venture.division_discovered">>).
+-define(TOPIC, <<"hecate.domain.division_discovered">>).
 
 -record(state, {
     subscription :: reference() | undefined
@@ -264,7 +271,7 @@ handle(FactData) ->
     ContextName = get_field(context_name, FactData),
     Description = get_field(description, FactData),
 
-    logger:debug("[policy] Processing division ~s (~s) from venture ~s",
+    logger:debug("[policy] Processing division ~s (~s) from domain ~s",
                 [DivisionId, ContextName, VentureId]),
 
     %% Policy: Always initiate (future: conditional logic here)
@@ -303,7 +310,7 @@ do_initiate(Params) ->
 Agent A (discover_divisions)                 Agent B (design_division)
 ────────────────────────                     ──────────────────────────
 
-1. User: POST /api/ventures/:id/divisions/discover
+1. User: POST /api/domains/:id/divisions/discover
    ↓
 2. discover_division_v1 (COMMAND)
    ↓
@@ -311,12 +318,12 @@ Agent A (discover_divisions)                 Agent B (design_division)
    ↓
 4. division_discovered_v1 (DOMAIN EVENT)
    ↓
-5. Stored in Venture's event stream
+5. Stored in Domain's event stream
    ↓
 6. division_discovered_v1_to_mesh:emit/1 (EMITTER)
    ↓
 ═══════════════════════════════════════════════════════════════
-                      MESH (topic: hecate.venture.division_discovered)
+                      MESH (topic: hecate.domain.division_discovered)
 ═══════════════════════════════════════════════════════════════
                                                      ↓
 7. subscribe_to_division_discovered (LISTENER)
@@ -364,7 +371,7 @@ design_division/src/
 
 | Component | Pattern | Example |
 |-----------|---------|---------|
-| **Topic** | `{namespace}.{domain}.{fact_name}` | `hecate.venture.division_discovered` |
+| **Topic** | `{namespace}.{domain}.{fact_name}` | `hecate.domain.division_discovered` |
 | **Emitter** | `{event}_to_mesh` | `division_discovered_v1_to_mesh` |
 | **Listener** | `subscribe_to_{fact}` | `subscribe_to_division_discovered` |
 | **Policy** | `on_{fact}_{action}_{target}` | `on_division_discovered_maybe_initiate_division` |

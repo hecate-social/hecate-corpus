@@ -1,15 +1,22 @@
+---
+title: "Example: Parent-Child Aggregate Pattern"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # Example: Parent-Child Aggregate Pattern
 
-*Canonical example: Venture → Division relationship*
+*Canonical example: Domain → Division relationship*
 
 > **Note:** This document has been updated to use current terminology (2026-02-10).
-> `torch` -> `venture`, `cartwheel` -> `division`, `spoke` -> `desk`.
+> `torch` -> `domain`, `cartwheel` -> `division`, `spoke` -> `desk`.
 
 ---
 
 ## The Pattern
 
-When a parent aggregate (Venture) needs to create child aggregates (Divisions):
+When a parent aggregate (Domain) needs to create child aggregates (Divisions):
 
 1. **Parent DISCOVERS** children (declares "I need X")
 2. **Child INITIATES** itself (starts its own lifecycle)
@@ -23,13 +30,13 @@ This separates:
 ## Domain Model
 
 ```
-Venture (Business Endeavor)
+Domain (Business Endeavor)
 ├── Has 0..N Divisions (Bounded Contexts)
 ├── DISCOVERS what divisions it needs
 └── Does NOT control division lifecycle
 
 Division (Bounded Context)
-├── Belongs to one Venture
+├── Belongs to one Domain
 ├── INITIATES its own lifecycle
 └── Manages its own phases (DnA, AnP, TnI, DnO)
 ```
@@ -39,14 +46,14 @@ Division (Bounded Context)
 ## Correct Flow
 
 ```
-User: "Create a venture with a division for user auth"
+User: "Create a domain with a division for user auth"
 
-1. POST /api/venture/initiate
-   → venture_initiated_v1 stored in Venture's stream
+1. POST /api/domain/initiate
+   → venture_initiated_v1 stored in Domain's stream
    → venture_initiated_v1 emitted to mesh (optional)
 
-2. POST /api/ventures/:id/divisions/discover
-   → division_discovered_v1 stored in Venture's stream
+2. POST /api/domains/:id/divisions/discover
+   → division_discovered_v1 stored in Domain's stream
    → division_discovered_v1 emitted to mesh
 
 3. Division service listener receives fact
@@ -67,7 +74,7 @@ User: "Create a venture with a division for user auth"
 - Assumes 1:1 relationship
 - No explicit decision about what divisions needed
 - Child creation happens without parent consent
-- Can't have ventures with 0, 2, or 10 divisions
+- Can't have domains with 0, 2, or 10 divisions
 
 ---
 
@@ -85,7 +92,7 @@ apps/discover_divisions/src/
 │
 └── discover_division/                      # Parent discovers children
     ├── discover_division_v1.erl           # Command
-    ├── division_discovered_v1.erl         # Event (in Venture stream!)
+    ├── division_discovered_v1.erl         # Event (in Domain stream!)
     ├── maybe_discover_division.erl        # Handler
     └── division_discovered_v1_to_mesh.erl # Emitter → mesh
 ```
@@ -112,11 +119,11 @@ apps/design_division/src/
 
 | Event | Stored In | Reason |
 |-------|-----------|--------|
-| `venture_initiated_v1` | Venture stream | Birth of venture |
-| `division_discovered_v1` | Venture stream | Parent's decision |
+| `venture_initiated_v1` | Domain stream | Birth of domain |
+| `division_discovered_v1` | Domain stream | Parent's decision |
 | `division_initiated_v1` | Division stream | Birth of division |
 
-**Key insight:** `division_discovered_v1` belongs to the venture because it's the parent's decision about what children exist.
+**Key insight:** `division_discovered_v1` belongs to the domain because it's the parent's decision about what children exist.
 
 ---
 
@@ -132,13 +139,13 @@ apps/design_division/src/
 ## API Endpoints
 
 ```http
-# Venture endpoints
-POST /api/venture/initiate           # Create a venture
-GET  /api/ventures                   # List all ventures
-GET  /api/ventures/:venture_id       # Get specific venture
+# Domain endpoints
+POST /api/domain/initiate           # Create a domain
+GET  /api/domains                   # List all domains
+GET  /api/domains/:venture_id       # Get specific domain
 
-# Division discovery (on Venture!)
-POST /api/ventures/:venture_id/divisions/discover
+# Division discovery (on Domain!)
+POST /api/domains/:venture_id/divisions/discover
 
 # Division lifecycle (separate domain)
 GET  /api/divisions                  # List all divisions
@@ -173,7 +180,7 @@ design_division/src/
     └── on_division_discovered_initiate_division.erl   # gen_server: pg:join + dispatch
 ```
 
-> Earlier guidance (2026-02-08) placed the listener INSIDE the desk. That was reversed 2026-03-12, reinforced 2026-05-24. See [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks) and [PROCESS_MANAGERS.md Location Rule](PROCESS_MANAGERS.md#location-rule).
+> Earlier guidance (2026-02-08) placed the listener INSIDE the desk. That was reversed 2026-03-12, reinforced 2026-05-24. See [antipatterns/structure.md Demon 18](../skills/antipatterns/structure.md#-demon-18-process-managers-inside-desks) and [PROCESS_MANAGERS.md Location Rule](PROCESS_MANAGERS.md#location-rule).
 
 ---
 
@@ -279,7 +286,7 @@ dispatch({error, _} = E) -> E.
 ## Key Takeaways
 
 1. **Parent discovers, child initiates** - Clear separation of concerns
-2. **Events belong to aggregate that makes decision** - `division_discovered` in venture stream
+2. **Events belong to aggregate that makes decision** - `division_discovered` in domain stream
 3. **Listeners live in desk they trigger** - Vertical slicing
 4. **No auto-creation** - Explicit decisions about what exists
 5. **Policy contains "maybe"** - Conditional logic is explicit

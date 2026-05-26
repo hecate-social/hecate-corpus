@@ -1,8 +1,15 @@
+---
+title: "ALC: Crafting -- Generate and Write Code"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # ALC: Crafting -- Generate and Write Code
 
-*Process 3 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 3 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -17,9 +24,9 @@ Crafting covers:
 - Building the walking skeleton
 
 Crafting does **not** cover:
-- Testing or verification (that is [Debugging](HECATE_ALC_DEBUGGING.md))
-- Building, compiling, or deploying artifacts (that is [Deployment](HECATE_ALC_DEPLOYMENT.md))
-- Restructuring existing code (that is [Refactoring](HECATE_ALC_REFACTORING.md))
+- Testing or verification (that is [Debugging](debugging.md))
+- Building, compiling, or deploying artifacts (that is [Deployment](deployment.md))
+- Restructuring existing code (that is [Refactoring](refactoring.md))
 
 **Crafting produces code. Other processes verify and ship it.**
 
@@ -65,7 +72,7 @@ pending --> active --> paused --> completed
 
 **Before implementing features, establish a fully operational system.**
 
-See: [HECATE_WALKING_SKELETON.md](HECATE_WALKING_SKELETON.md)
+See: [HECATE_WALKING_SKELETON.md](../HECATE_WALKING_SKELETON.md)
 
 > Don't build all the code, then add deployment.
 > Build the deployment, then add the code.
@@ -119,7 +126,7 @@ apps/query_{domain}/
       find_{dossier}.erl
 ```
 
-**Use CODEGEN templates:** See [CODEGEN_ERLANG_TEMPLATES.md](../skills/codegen/erlang/CODEGEN_ERLANG_TEMPLATES.md) and [CODEGEN_ERLANG_CHECKLISTS.md](../skills/codegen/erlang/CODEGEN_ERLANG_CHECKLISTS.md)
+**Use CODEGEN templates:** See [CODEGEN_ERLANG_TEMPLATES.md](../../skills/codegen/erlang/CODEGEN_ERLANG_TEMPLATES.md) and [CODEGEN_ERLANG_CHECKLISTS.md](../../skills/codegen/erlang/CODEGEN_ERLANG_CHECKLISTS.md)
 
 ---
 
@@ -184,7 +191,7 @@ For each desk in the plan:
 1. Generate from CODEGEN template
 2. Fill in business logic
 3. Verify locally (compile, dialyzer)
-4. Check against [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md)
+4. Check against [antipatterns/INDEX.md](../../skills/antipatterns/INDEX.md)
 5. Commit with clear message
 6. Push and verify CI
 7. Move to next desk
@@ -210,7 +217,7 @@ For each desk in the plan:
 
 ## Entry Checklist (Before Opening Crafting)
 
-- [ ] [Planning](HECATE_ALC_PLANNING.md) concluded or sufficient desks planned
+- [ ] [Planning](planning.md) concluded or sufficient desks planned
 - [ ] Desks prioritized and sequenced
 - [ ] Walking skeleton scope defined
 - [ ] CI/CD and GitOps strategy decided
@@ -224,7 +231,7 @@ For each desk in the plan:
 - [ ] All planned desks implemented
 - [ ] Code compiles cleanly
 - [ ] Dialyzer clean (Erlang) or equivalent type checking passes
-- [ ] Ready for [Debugging](HECATE_ALC_DEBUGGING.md) to write and run tests
+- [ ] Ready for [Debugging](debugging.md) to write and run tests
 
 ---
 
@@ -244,11 +251,11 @@ For each desk in the plan:
 
 ## Related
 
-- [Walking Skeleton Doctrine](HECATE_WALKING_SKELETON.md) -- Fully operational from day one
-- [CODEGEN Templates](../skills/codegen/erlang/CODEGEN_ERLANG_TEMPLATES.md) -- Code generation templates
-- [CODEGEN Checklists](../skills/codegen/erlang/CODEGEN_ERLANG_CHECKLISTS.md) -- Generation checklists
-- [Vertical Slicing](VERTICAL_SLICING.md) -- Features live together
-- [Screaming Architecture](SCREAMING_ARCHITECTURE.md) -- Names reveal intent
+- [Walking Skeleton Doctrine](../HECATE_WALKING_SKELETON.md) -- Fully operational from day one
+- [CODEGEN Templates](../../skills/codegen/erlang/CODEGEN_ERLANG_TEMPLATES.md) -- Code generation templates
+- [CODEGEN Checklists](../../skills/codegen/erlang/CODEGEN_ERLANG_CHECKLISTS.md) -- Generation checklists
+- [Vertical Slicing](../VERTICAL_SLICING.md) -- Features live together
+- [Screaming Architecture](../SCREAMING_ARCHITECTURE.md) -- Names reveal intent
 
 ---
 

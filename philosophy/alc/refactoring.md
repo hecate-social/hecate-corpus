@@ -1,8 +1,15 @@
+---
+title: "ALC: Refactoring -- Improve Existing Structure"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # ALC: Refactoring -- Improve Existing Structure
 
-*Process 4 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 4 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -136,7 +143,7 @@ Make structural changes incrementally:
 - [ ] New pinning tests still pass
 - [ ] Code compiles cleanly
 - [ ] Dialyzer clean
-- [ ] No antipatterns introduced (check [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md))
+- [ ] No antipatterns introduced (check [antipatterns/INDEX.md](../../skills/antipatterns/INDEX.md))
 - [ ] Documentation updated to reflect new structure
 
 ### 5. Commit and Conclude
@@ -197,11 +204,11 @@ Make structural changes incrementally:
 
 ## Related
 
-- [Debugging](HECATE_ALC_DEBUGGING.md) -- Often discovers the need for refactoring
-- [Crafting](HECATE_ALC_CRAFTING.md) -- Often follows refactoring to add new features
-- [Vertical Slicing](VERTICAL_SLICING.md) -- The target structure for most refactoring
-- [Screaming Architecture](SCREAMING_ARCHITECTURE.md) -- The naming standard to refactor toward
-- [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md) -- What not to introduce
+- [Debugging](debugging.md) -- Often discovers the need for refactoring
+- [Crafting](crafting.md) -- Often follows refactoring to add new features
+- [Vertical Slicing](../VERTICAL_SLICING.md) -- The target structure for most refactoring
+- [Screaming Architecture](../SCREAMING_ARCHITECTURE.md) -- The naming standard to refactor toward
+- [antipatterns/INDEX.md](../../skills/antipatterns/INDEX.md) -- What not to introduce
 
 ---
 

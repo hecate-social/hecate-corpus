@@ -1,6 +1,13 @@
+---
+title: Consolidated Quick Reference
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # NAMING_CONVENTIONS.md — Consolidated Quick Reference
 
-_Single-page reference for all naming conventions in the Venture/Division/Desk architecture._
+_Single-page reference for all naming conventions in the Domain/Division/Desk architecture._
 _An LLM doing TnI codegen reads ONLY this file + the relevant template._
 
 ---
@@ -187,7 +194,7 @@ Multiple versions and targets coexist in the same desk directory.
 
 | Aggregate | Stream Pattern | Example |
 |-----------|---------------|---------|
-| Venture | `venture-{venture_id}` | `venture-019e642a1acf7019a433f0634a035877` |
+| Domain | `domain-{venture_id}` | `domain-019e642a1acf7019a433f0634a035877` |
 | Division | `division-{division_id}` | `division-019e643ba9937926b14648f21ec23fc9` |
 | Generic | `{aggregate_noun}-{id}` | `order-019e644a8b1d70291a456b5e9c3df8a2` |
 
@@ -220,7 +227,7 @@ LotId = reckon_gater_stream_id:new(parking_lot).  %% atom prefix also accepted
 formatter. UUID-v4 string output (`9D9D16B6-F56E-...`) fails the
 contract: uppercase + internal hyphens. The dispatch returns
 `{error, {invalid_stream_id, malformed_user_id, ...}}` — see Demon 49
-in `ANTIPATTERNS_EVENT_SOURCING.md` for the entire failure mode.
+in `antipatterns/event_sourcing.md` for the entire failure mode.
 
 ---
 

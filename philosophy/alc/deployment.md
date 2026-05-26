@@ -1,8 +1,15 @@
+---
+title: "ALC: Deployment -- Ship to Environments"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # ALC: Deployment -- Ship to Environments
 
-*Process 6 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 6 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -204,7 +211,7 @@ Automated smoke tests should run on every deployment. If a smoke test fails, the
 | Editing units in ~/.config/containers/systemd/ | Bypasses gitops, lost on next reconcile | Edit in ~/.hecate/gitops/ only |
 | Skipping the version bump | Cannot tell what is deployed | Always bump, always tag |
 | Building images locally | Unreproducible, no audit trail | Let CI build from the git tag |
-| Deploy and forget | Issues go unnoticed until users complain | Hand off to [Monitoring](HECATE_ALC_MONITORING.md) |
+| Deploy and forget | Issues go unnoticed until users complain | Hand off to [Monitoring](monitoring.md) |
 | No rollback plan | Stuck when things break | Always document the rollback path |
 | Manual deployments | Inconsistent, error-prone | GitOps always |
 
@@ -231,18 +238,18 @@ Automated smoke tests should run on every deployment. If a smoke test fails, the
 - [ ] Smoke tests passing
 - [ ] No error spikes in initial observation window
 - [ ] Version traceable on node (correct image tag running: `podman ps`)
-- [ ] Monitoring process ready to open (hand off to [Monitoring](HECATE_ALC_MONITORING.md))
+- [ ] Monitoring process ready to open (hand off to [Monitoring](monitoring.md))
 - [ ] Users unaffected or notified of changes
 
 ---
 
 ## Transition
 
-**Inbound:** From [Debugging](HECATE_ALC_DEBUGGING.md) (process 5). Debugging concluded, artifact is tested and ready.
+**Inbound:** From [Debugging](debugging.md) (process 5). Debugging concluded, artifact is tested and ready.
 
-**Outbound:** To [Monitoring](HECATE_ALC_MONITORING.md) (process 7). Deployment concluded, artifact is running -- now observe it.
+**Outbound:** To [Monitoring](monitoring.md) (process 7). Deployment concluded, artifact is running -- now observe it.
 
-**Escalation:** If deployment reveals issues that cannot be fixed by rollback, open [Rescue](HECATE_ALC_RESCUE.md).
+**Escalation:** If deployment reveals issues that cannot be fixed by rollback, open [Rescue](rescue.md).
 
 ---
 

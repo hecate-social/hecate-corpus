@@ -1,8 +1,15 @@
+---
+title: "ALC: Rescue -- Respond and Recover"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # ALC: Rescue -- Respond and Recover
 
-*Process 8 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 8 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -86,7 +93,7 @@ The goal of mitigation is to restore service, not to fix the bug. These are temp
 | **Traffic redirect** | One node/region affected | Requires multi-region setup |
 | **Hotfix** | Root cause is known and fix is small | Risky if rushed -- prefer rollback |
 
-**Rollback is always the safest first response.** See [Deployment](HECATE_ALC_DEPLOYMENT.md) for rollback mechanics -- it is a forward GitOps action, not a special procedure.
+**Rollback is always the safest first response.** See [Deployment](deployment.md) for rollback mechanics -- it is a forward GitOps action, not a special procedure.
 
 ---
 
@@ -278,9 +285,9 @@ Every division in production should have a runbook. Rescue references it during 
 
 ## Transition
 
-**Inbound:** From [Monitoring](HECATE_ALC_MONITORING.md) (process 7) when an incident is detected. Can also be triggered by user reports or external alerts.
+**Inbound:** From [Monitoring](monitoring.md) (process 7) when an incident is detected. Can also be triggered by user reports or external alerts.
 
-**Outbound:** Back to [Monitoring](HECATE_ALC_MONITORING.md) when the incident is resolved and production returns to normal. To [Design](HECATE_ALC_DESIGN.md) when rescue reveals architectural flaws (the cycle restarts). To [Refactoring](HECATE_ALC_REFACTORING.md) when rescue reveals structural rot.
+**Outbound:** Back to [Monitoring](monitoring.md) when the incident is resolved and production returns to normal. To [Design](design.md) when rescue reveals architectural flaws (the cycle restarts). To [Refactoring](refactoring.md) when rescue reveals structural rot.
 
 **The cycle:** Rescue is process 8, but it points back to process 1. This is not a pipeline -- it is a wheel. The goddess turns it as many times as needed.
 

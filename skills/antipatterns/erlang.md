@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Erlang/OTP Gotchas"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Erlang/OTP Gotchas
 
 *Demons about Erlang-specific pitfalls. esqlite3, maps, gen_server, and OTP.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 

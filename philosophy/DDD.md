@@ -1,3 +1,10 @@
+---
+title: The Dossier Principle
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # DDD.md — The Dossier Principle
 
 *Process-centric domain modeling for Division architecture.*
@@ -397,7 +404,7 @@ Before writing any event handler or PM, ask:
 
 If the answer is no — because a PM reads from a read model that might be empty during replay — you have a Demon #41 violation. The event payload is too poor. Enrich it.
 
-See: `skills/ANTIPATTERNS_EVENT_SOURCING.md` — Demon #41
+See: `skills/antipatterns/event_sourcing.md` — Demon #41
 
 ---
 

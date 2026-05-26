@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Event Sourcing"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Event Sourcing — Aggregates, Events, Envelopes
 
 *Demons about event sourcing mechanics. Aggregates, event records, envelopes, and stores.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 
@@ -608,7 +615,7 @@ Enriching the source event is the right fix when the data lives in the source ag
 
 The general structural cure is the **command pipeline**: all external reads happen in named pipeline steps BEFORE the aggregate sees the command. The aggregate stays a pure function of `(State, EnrichedCommand)`. Any cross-domain read — whether to enrich a HOPE-driven command or to enrich a PM-dispatched command — happens in the pipeline, at command-preparation time, never inside event handling.
 
-See [philosophy/COMMAND_PIPELINES.md](../philosophy/COMMAND_PIPELINES.md) for the pattern and [skills/codegen/erlang/CODEGEN_ERLANG_PIPELINES.md](codegen/erlang/CODEGEN_ERLANG_PIPELINES.md) for templates.
+See [philosophy/COMMAND_PIPELINES.md](../../philosophy/COMMAND_PIPELINES.md) for the pattern and [skills/codegen/erlang/CODEGEN_ERLANG_PIPELINES.md](../codegen/erlang/CODEGEN_ERLANG_PIPELINES.md) for templates.
 
 The two cures stack: **enrich the event at the source** when data is local, **enrich the command via pipeline** when data is cross-domain. Together they keep aggregates pure and PMs free of read-model lookups.
 
@@ -617,7 +624,7 @@ The two cures stack: **enrich the event at the source** when data is local, **en
 ## 🔥 Aggregate `apply/2` Sees Two Event Shapes (and `execute/2` Must Not Pre-Wrap `data`)
 
 **Date:** 2026-05-21
-**Origin:** reckon-portal blog Division (dogfooding ReckonDB). Verified against **evoq 1.15.0** — the `evoq_aggregate` reference in `codegen/erlang/EVOQ_BEHAVIOURS.md` is dated to ~1.4, and this corner behaves as below in 1.15.
+**Origin:** reckon-portal blog Division (dogfooding ReckonDB). Verified against **evoq 1.15.0** — the `evoq_aggregate` reference in `../codegen/erlang/EVOQ_BEHAVIOURS.md` is dated to ~1.4, and this corner behaves as below in 1.15.
 
 ### The Antipattern
 
@@ -757,7 +764,7 @@ condition" or a "delivery bug" — but the bug is upstream in a
 discarded return value.
 
 This is the application-side mirror of the Feedback pattern (see
-`guides/INTEGRATION_ACTORS.md` § Session-Level Consistency). The same
+`../guides/INTEGRATION_ACTORS.md` § Session-Level Consistency). The same
 return shape that carries `{ok, Version, Events}` (or
 `{ok, Version, Events, State}` from `dispatch_with_state/1`) is also
 the error channel. Throwing it away means throwing away both the

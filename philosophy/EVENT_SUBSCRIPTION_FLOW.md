@@ -1,3 +1,10 @@
+---
+title: Event Subscription Flow
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # Event Subscription Flow
 
 How events flow from command dispatch to projections, emitters, and external consumers.

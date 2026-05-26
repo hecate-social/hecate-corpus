@@ -1,3 +1,10 @@
+---
+title: The Hecate four-tier model
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # The Hecate four-tier model
 
 Adopted 2026-05-18. Codifies the cut between **per-user agent surface**

@@ -5,16 +5,16 @@ tier: T1
 phase: cross-cutting
 hitl_gate: review_gate
 context:
-  - skills/ANTIPATTERNS.md
-  - skills/ANTIPATTERNS_DOMAIN.md
-  - skills/ANTIPATTERNS_ERLANG.md
-  - skills/ANTIPATTERNS_EVENT_SOURCING.md
-  - skills/ANTIPATTERNS_INTEGRATION.md
-  - skills/ANTIPATTERNS_NAMING.md
-  - skills/ANTIPATTERNS_PLUGIN.md
-  - skills/ANTIPATTERNS_PROJECTIONS.md
-  - skills/ANTIPATTERNS_STRUCTURE.md
-  - skills/ANTIPATTERNS_RELEASE.md
+  - skills/antipatterns/INDEX.md
+  - skills/antipatterns/domain.md
+  - skills/antipatterns/erlang.md
+  - skills/antipatterns/event_sourcing.md
+  - skills/antipatterns/integration.md
+  - skills/antipatterns/naming.md
+  - skills/antipatterns/plugin.md
+  - skills/antipatterns/projections.md
+  - skills/antipatterns/structure.md
+  - skills/antipatterns/release.md
   - skills/SLICE_AUDIT.md
   - skills/CODE_QUALITY.md
 ---

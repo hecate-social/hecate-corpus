@@ -1,3 +1,10 @@
+---
+title: "Example: Vertical API Handlers"
+layer: example
+audience: [agent, human]
+stage: stable
+---
+
 # Example: Vertical API Handlers
 
 *Canonical example: API handlers live in their desks, not in a monolithic API app*
@@ -108,9 +115,9 @@ get_field(Key, Map, Default) when is_atom(Key) ->
 ## Desk API Handler Template
 
 ```erlang
-%%% @doc API handler: POST /api/venture/initiate
+%%% @doc API handler: POST /api/domain/initiate
 %%%
-%%% Initiates a new venture.
+%%% Initiates a new domain.
 %%% Lives in the initiate_venture desk for vertical slicing.
 %%% @end
 -module(initiate_venture_api).
@@ -176,7 +183,7 @@ dispatch(Cmd, Req) ->
 ### By-ID Query Handler
 
 ```erlang
-%%% @doc API handler: GET /api/ventures/:venture_id
+%%% @doc API handler: GET /api/domains/:venture_id
 -module(get_venture_by_id_api).
 
 -export([init/2]).
@@ -190,8 +197,8 @@ init(Req0, State) ->
 handle_get(Req0, _State) ->
     VentureId = cowboy_req:binding(venture_id, Req0),
     case get_venture_by_id:execute(VentureId) of
-        {ok, Venture} ->
-            hecate_api_utils:json_ok(#{venture => Venture}, Req0);
+        {ok, Domain} ->
+            hecate_api_utils:json_ok(#{domain => Domain}, Req0);
         {error, not_found} ->
             hecate_api_utils:not_found(Req0);
         {error, Reason} ->
@@ -202,7 +209,7 @@ handle_get(Req0, _State) ->
 ### Paged List Query Handler
 
 ```erlang
-%%% @doc API handler: GET /api/ventures
+%%% @doc API handler: GET /api/domains
 -module(get_ventures_page_api).
 
 -export([init/2]).
@@ -218,7 +225,7 @@ handle_get(Req0, _State) ->
     Filters = build_filters(QS),
     case get_ventures_page:execute(Filters) of
         {ok, Result} ->
-            hecate_api_utils:json_ok(#{ventures => Result}, Req0);
+            hecate_api_utils:json_ok(#{domains => Result}, Req0);
         {error, Reason} ->
             hecate_api_utils:json_error(500, Reason, Req0)
     end.
@@ -259,12 +266,12 @@ routes() ->
 %% Routes reference desk handlers directly
 venture_routes() ->
     [
-        {"/api/venture", get_active_venture_api, []},
-        {"/api/venture/initiate", initiate_venture_api, []},
-        {"/api/ventures", get_ventures_page_api, []},
-        {"/api/ventures/:venture_id", get_venture_by_id_api, []},
-        {"/api/ventures/:venture_id/archive", archive_venture_api, []},
-        {"/api/ventures/:venture_id/divisions/discover", discover_division_api, []}
+        {"/api/domain", get_active_venture_api, []},
+        {"/api/domain/initiate", initiate_venture_api, []},
+        {"/api/domains", get_ventures_page_api, []},
+        {"/api/domains/:venture_id", get_venture_by_id_api, []},
+        {"/api/domains/:venture_id/archive", archive_venture_api, []},
+        {"/api/domains/:venture_id/divisions/discover", discover_division_api, []}
     ].
 
 %% Division routes - organized by ALC phase
@@ -286,7 +293,7 @@ division_routes() ->
 **Route conventions:**
 - `POST /api/{domain}/{verb}` — commands (e.g., `/api/social/follow`)
 - `GET /api/{domain}` — paged list (e.g., `/api/capabilities`)
-- `GET /api/{domain}/:id` — single by-id lookup (e.g., `/api/ventures/:venture_id`)
+- `GET /api/{domain}/:id` — single by-id lookup (e.g., `/api/domains/:venture_id`)
 - `POST /api/{domain}/:id/{verb}` — action on existing aggregate (e.g., `/api/divisions/:id/transition`)
 - No `[action]` state args — each route maps to a dedicated handler module
 

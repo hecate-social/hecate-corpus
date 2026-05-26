@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Integration"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Integration — Subscriptions, Messaging, Process Managers
 
 *Demons about integration channels, subscription pipelines, and cross-domain communication.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 
@@ -66,7 +73,7 @@ setup_venture (CMD app)
 | pg | `{event}_to_pg.erl` | `on_{event}_from_pg_*.erl` |
 | mesh | `{event}_to_mesh.erl` | `on_{event}_from_mesh_*.erl` |
 
-See [INTEGRATION_TRANSPORTS.md](../philosophy/INTEGRATION_TRANSPORTS.md) for full details.
+See [INTEGRATION_TRANSPORTS.md](../../philosophy/INTEGRATION_TRANSPORTS.md) for full details.
 
 ---
 
@@ -82,7 +89,7 @@ Performing side effects (file I/O, state changes) in a client based on a command
 **Example (WRONG):**
 ```javascript
 // Client sends command to daemon
-const res = await fetch('hecate://localhost/api/ventures/refine-vision', {
+const res = await fetch('hecate://localhost/api/domains/refine-vision', {
     method: 'POST', body: JSON.stringify(params)
 });
 if (res.ok) {
@@ -101,13 +108,13 @@ The 200 OK means "I received your hope." Not "the vision was refined." Between a
 
 ```javascript
 // Client subscribes to event stream
-const events = new EventSource('hecate://localhost/api/ventures/events');
+const events = new EventSource('hecate://localhost/api/domains/events');
 events.addEventListener('vision_refined_v1', (e) => {
     updateVisionDisplay(JSON.parse(e.data));  // NOW it's safe
 });
 
 // Client sends hope (fire and forget the response)
-fetch('hecate://localhost/api/ventures/refine-vision', {
+fetch('hecate://localhost/api/domains/refine-vision', {
     method: 'POST', body: JSON.stringify(params)
 });  // 202 Accepted — don't act on the response
 ```
@@ -121,7 +128,7 @@ fetch('hecate://localhost/api/ventures/refine-vision', {
 
 ### Reference
 
-See [HOPE_FACT_SIDE_EFFECTS.md](HOPE_FACT_SIDE_EFFECTS.md) for the full architectural pattern.
+See [HOPE_FACT_SIDE_EFFECTS.md](../HOPE_FACT_SIDE_EFFECTS.md) for the full architectural pattern.
 
 ---
 
@@ -167,7 +174,7 @@ evoq v1.3.0+ auto-generates `command_id`. Dispatch modules drop `generate_comman
 
 **Date exorcised:** 2026-02-13
 **Where it appeared:** reckon-db subscription delivery pipeline (three bugs: v1.2.4, v1.2.5, v1.2.6)
-**Cost:** 7 days of debugging. POST /api/ventures/initiate returns 201, GET /api/ventures returns []. No errors, no crashes, no warnings.
+**Cost:** 7 days of debugging. POST /api/domains/initiate returns 201, GET /api/domains returns []. No errors, no crashes, no warnings.
 
 ### The Lie
 
@@ -286,7 +293,7 @@ When generating code that uses ReckonDB subscriptions:
 - [reckon-db CHANGELOG](https://github.com/reckon-db-org/reckon-db/blob/main/CHANGELOG.md) — bugs documented in v1.2.4, v1.2.5, v1.2.6
 - Demon #22 (Manual Event Emission) — the application-level version of this infrastructure-level problem
 - Demon #23 (Raw Records in Projections) — another "silent failure" in the event delivery chain
-- [SESSION_LEVEL_CONSISTENCY.md](../philosophy/SESSION_LEVEL_CONSISTENCY.md) — the mitigation pattern: return aggregate state from commands so callers don't depend on projection timing
+- [SESSION_LEVEL_CONSISTENCY.md](../../philosophy/SESSION_LEVEL_CONSISTENCY.md) — the mitigation pattern: return aggregate state from commands so callers don't depend on projection timing
 
 ---
 

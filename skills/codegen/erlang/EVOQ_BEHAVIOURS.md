@@ -1,3 +1,10 @@
+---
+title: Evoq Behaviours
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # Evoq Behaviours — Complete Reference
 
 **Package:** `evoq` (hex.pm, ~> 1.4)

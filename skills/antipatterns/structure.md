@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Structure"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Structure — Code Organization Violations
 
 *Demons about code structure. Vertical slicing, not horizontal layers.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 
@@ -66,7 +73,7 @@ Without responders, your domain can emit but not receive. You have a mouth but n
 
 Without desk supervisors, your supervision tree is flat and you lose fault isolation per feature.
 
-See [CARTWHEEL.md](../philosophy/CARTWHEEL.md) for the complete canonical structure.
+See [CARTWHEEL.md](../../philosophy/CARTWHEEL.md) for the complete canonical structure.
 
 ---
 
@@ -145,7 +152,7 @@ The domain supervisor starts each PM slice's supervisor alongside the desk super
 - **No orphans** — Every PM has a clear owner (its slice sup).
 - **Vertical slicing** — No horizontal grouping by technical concern.
 
-See [PROCESS_MANAGERS.md](../philosophy/PROCESS_MANAGERS.md) and [INTEGRATION_TRANSPORTS.md](../philosophy/INTEGRATION_TRANSPORTS.md) for slice structures.
+See [PROCESS_MANAGERS.md](../../philosophy/PROCESS_MANAGERS.md) and [INTEGRATION_TRANSPORTS.md](../../philosophy/INTEGRATION_TRANSPORTS.md) for slice structures.
 
 ---
 
@@ -207,7 +214,7 @@ Replaced 11 god modules (1,700+ lines) with 50 desk-based handlers (~30-50 lines
 All handlers use `hecate_api_utils` from the `shared` app for response helpers.
 Routes standardized under `/api/` prefix.
 
-Reference: `skills/codegen/erlang/CODEGEN_ERLANG_TEMPLATES.md` → API Handler Templates
+Reference: `../skills/codegen/erlang/CODEGEN_ERLANG_TEMPLATES.md` → API Handler Templates
 
 ---
 
@@ -267,7 +274,7 @@ apps/manage_capabilities/src/
 
 > **PMs are cross-slice. They get their own slice. The `on_*` prefix and the slice directory together are the discoverability anchor for business process flow.**
 
-See [PROCESS_MANAGERS.md](../philosophy/PROCESS_MANAGERS.md) for the canonical pattern and code template.
+See [PROCESS_MANAGERS.md](../../philosophy/PROCESS_MANAGERS.md) for the canonical pattern and code template.
 
 ---
 

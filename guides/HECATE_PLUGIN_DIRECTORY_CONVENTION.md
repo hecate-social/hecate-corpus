@@ -1,3 +1,10 @@
+---
+title: Hecate Plugin Directory Convention
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Hecate Plugin Directory Convention
 
 ## Overview
@@ -45,13 +52,13 @@ aspect of the desks.
 Martha App = Martha Division (the ALC bounded context)
 
 Daemon (hecate-marthad):
-  apps/guide_venture_lifecycle/     = CMD department (venture process)
+  apps/guide_venture_lifecycle/     = CMD department (domain process)
   apps/guide_division_alc/          = CMD department (division process)
-  apps/query_venture_lifecycle/     = QRY+PRJ department (venture reads)
+  apps/query_venture_lifecycle/     = QRY+PRJ department (domain reads)
   apps/query_division_alc/          = QRY+PRJ department (division reads)
 
 Frontend (hecate-marthaw):
-  brainstorm_venture_events/        = UI for venture storm desk
+  brainstorm_venture_events/        = UI for domain storm desk
   design_division/                  = UI for design desk
   plan_division/                    = UI for planning desk
   ...etc
@@ -176,7 +183,7 @@ The CLI gives headless/SSH access to the same functionality.
       daemon.pid
       daemon.state
     connectors/
-    hecate-agents/                           # Cloned knowledge base (AI instructions)
+    hecate-corpus/                           # Cloned knowledge base (AI instructions)
 ```
 
 Frontends (hecate-traderw, hecate-marthaw, etc.) are stateless containers.
@@ -199,7 +206,7 @@ Every Erlang daemon gets the full standard structure:
 | `connectors/` | Connector socket files |
 
 Daemons that include an AI agent (like `hecate-marthad`) may also have
-a cloned knowledge base directory (e.g. `hecate-agents/`).
+a cloned knowledge base directory (e.g. `hecate-corpus/`).
 
 Frontends do NOT get their own namespace. They are stateless containers
 that connect to their daemon's socket via bind mount.
@@ -479,4 +486,4 @@ The base directory is configured via `{hecate, [{data_dir, "~/.hecate/hecate-dae
 | Plugin daemons | Their own namespace | Plugin registration API |
 | Plugin frontends | Daemon socket path | Convention: `~/.hecate/{daemon}/sockets/api.sock` |
 | Systemd reconciler | Quadlet unit files | `~/.hecate/gitops/` |
-| AI agents (Martha) | Knowledge base | `~/.hecate/hecate-marthad/hecate-agents/` |
+| AI agents (Martha) | Knowledge base | `~/.hecate/hecate-marthad/hecate-corpus/` |

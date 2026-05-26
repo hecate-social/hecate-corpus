@@ -1,3 +1,10 @@
+---
+title: The Canonical Architecture
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # CARTWHEEL.md — The Canonical Architecture
 
 *The Division Architecture in practice. This is the blueprint.*

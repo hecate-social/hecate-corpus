@@ -5,7 +5,7 @@ tier: T3/T0
 phase: crafting (post-review)
 hitl_gate: release_gate
 context:
-  - skills/ANTIPATTERNS_RELEASE.md
+  - skills/antipatterns/release.md
   - skills/codegen/erlang/CODEGEN_PLUGIN_SCAFFOLD.md
 ---
 

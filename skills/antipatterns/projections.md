@@ -1,15 +1,22 @@
+---
+title: "ANTIPATTERNS: Projections & Read Models"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Projections & Read Models
 
 *Demons about projections, read model management, and PRJ/QRY separation.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 
 ## 🔥 Read-Time Status Enrichment
 
 **Date:** 2026-02-10
-**Origin:** hecate-daemon venture/division status handling
+**Origin:** hecate-daemon domain/division status handling
 
 ### The Antipattern
 
@@ -19,7 +26,7 @@ Computing `status_label` at query time instead of storing it in the read model a
 ```erlang
 %% BAD: Query module enriches at read time
 list(Opts) ->
-    {ok, Rows} = store:query("SELECT * FROM ventures"),
+    {ok, Rows} = store:query("SELECT * FROM domains"),
     [enrich_status(row_to_map(R)) || R <- Rows].
 
 enrich_status(#{status := Status} = Row) ->
@@ -63,14 +70,14 @@ project(Event) ->
     Status = evoq_bit_flags:set_all(0, [?VENTURE_INITIATED, ?VENTURE_DNA_ACTIVE]),
     Label = evoq_bit_flags:to_string(Status, ?VENTURE_FLAG_MAP),
     store:execute(
-        "INSERT INTO ventures (venture_id, status, status_label) VALUES (?1, ?2, ?3)",
+        "INSERT INTO domains (venture_id, status, status_label) VALUES (?1, ?2, ?3)",
         [VentureId, Status, Label]).
 ```
 
 **3. Query module reads `status_label` directly — no enrichment:**
 ```erlang
 list(Opts) ->
-    {ok, Rows} = store:query("SELECT venture_id, status, status_label FROM ventures"),
+    {ok, Rows} = store:query("SELECT venture_id, status, status_label FROM domains"),
     [row_to_map(R) || R <- Rows].
 %% NO enrich_status function at all
 ```
@@ -236,7 +243,7 @@ RIGHT:  ReckonDB -> evoq subscription -> emitter -> pg -> listener
 
 > **The API handler dispatches commands. The event store delivers events. These are separate concerns.**
 > **Emitters subscribe to the store — they are NOT called by application code.**
-> **See [EVENT_SUBSCRIPTION_FLOW.md](../philosophy/EVENT_SUBSCRIPTION_FLOW.md) for the canonical pattern.**
+> **See [EVENT_SUBSCRIPTION_FLOW.md](../../philosophy/EVENT_SUBSCRIPTION_FLOW.md) for the canonical pattern.**
 
 ---
 

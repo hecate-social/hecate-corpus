@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Domain"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Domain — Domain Modeling Mistakes
 
 *Demons about domain modeling. Process-centric, not data-centric.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 
@@ -57,7 +64,7 @@ Domain B (manage_capabilities)
 ## 🔥 Missing or Wrong "Birth" Event
 
 **Date:** 2026-02-08
-**Origin:** Venture/Division architecture discussion
+**Origin:** Domain/Division architecture discussion
 
 ### The Antipattern
 
@@ -78,7 +85,7 @@ This event is the "birth" of the aggregate — it marks the moment the process b
 
 | ✅ Correct | Aggregate |
 |-----------|-----------|
-| `venture_initiated_v1` | Venture |
+| `venture_initiated_v1` | Domain |
 | `division_initiated_v1` | Division |
 | `order_initiated_v1` | Order |
 | `claim_initiated_v1` | Insurance Claim |
@@ -97,7 +104,7 @@ This event is the "birth" of the aggregate — it marks the moment the process b
 %% First event in any aggregate stream
 #{
     event_type => <<"venture_initiated_v1">>,
-    stream_id => <<"venture-abc123">>,
+    stream_id => <<"domain-abc123">>,
     data => #{
         venture_id => <<"abc123">>,
         name => <<"macula-geo">>,
@@ -121,7 +128,7 @@ When creating a new aggregate:
 ## 🔥 Auto-Creating Child Aggregates on Parent Initiation
 
 **Date:** 2026-02-08
-**Origin:** Venture → Division architecture discussion
+**Origin:** Domain → Division architecture discussion
 
 ### The Antipattern
 
@@ -135,11 +142,11 @@ venture_initiated_v1
 ```
 
 This assumes:
-- Every venture needs exactly one division
+- Every domain needs exactly one division
 - The relationship is 1:1 and automatic
 - No human/agent decision is needed
 
-**Reality:** A venture might need 0, 1, 5, or 10 divisions. This is a deliberate decision, not an automatic consequence.
+**Reality:** A domain might need 0, 1, 5, or 10 divisions. This is a deliberate decision, not an automatic consequence.
 
 ### The Rule
 
@@ -150,8 +157,8 @@ The parent owns the "what exists" decision. The child owns its lifecycle.
 ### The Correct Flow
 
 ```
-1. venture_initiated_v1          # Venture exists
-2. division_discovered_v1        # Venture decides "I need a division called X"
+1. venture_initiated_v1          # Domain exists
+2. division_discovered_v1        # Domain decides "I need a division called X"
    → emitted to mesh
 3. division_initiated_v1         # Division service starts X's lifecycle
 ```
@@ -160,7 +167,7 @@ The parent owns the "what exists" decision. The child owns its lifecycle.
 
 | Action | Owner | Meaning |
 |--------|-------|---------|
-| **Discover** | Parent (venture) | "This parent will have a child called X" |
+| **Discover** | Parent (domain) | "This parent will have a child called X" |
 | **Initiate** | Child (division) | "Start the lifecycle of X" |
 
 ### Why It Matters
@@ -197,8 +204,8 @@ POST /api/divisions/initiate
 ```
 
 This bypasses the domain flow:
-- Divisions should only exist because a venture discovered them
-- Direct creation allows orphan divisions (no parent venture)
+- Divisions should only exist because a domain discovered them
+- Direct creation allows orphan divisions (no parent domain)
 - Violates the parent-child aggregate pattern
 
 ### The Rule
@@ -207,7 +214,7 @@ This bypasses the domain flow:
 
 ### The Correct Flow
 
-1. **Parent discovers child**: `POST /api/ventures/:venture_id/divisions/discover`
+1. **Parent discovers child**: `POST /api/domains/:venture_id/divisions/discover`
 2. **Event emitted**: `division_discovered_v1` to pg (internal) + mesh (external)
 3. **PM sibling slice in target domain receives**: `on_division_discovered_initiate_division/` in `design_division` (gen_server `pg:join`s source scope in `init/1`)
 4. **PM dispatches command**: `initiate_division_v1`
@@ -217,14 +224,14 @@ This bypasses the domain flow:
 
 | Aggregate Type | Creation Endpoint? | Why |
 |----------------|-------------------|-----|
-| **Root aggregate** | Yes | Venture, Order, User — top-level entities |
+| **Root aggregate** | Yes | Domain, Order, User — top-level entities |
 | **Child aggregate** | No | Division, OrderLine — created via parent |
 
 ### API Design Pattern
 
 ```erlang
 %% GOOD: Parent creates children through relationship
-POST /api/ventures/:venture_id/divisions/discover
+POST /api/domains/:venture_id/divisions/discover
 
 %% BAD: Direct creation of child
 POST /api/divisions/initiate    % REMOVE THIS

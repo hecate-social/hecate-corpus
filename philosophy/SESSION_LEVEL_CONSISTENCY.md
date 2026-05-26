@@ -1,3 +1,10 @@
+---
+title: SESSION-LEVEL CONSISTENCY
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # SESSION-LEVEL CONSISTENCY — Mitigating Projection Race Conditions
 
 *When the user initiates a command, the response should be immediately usable without waiting for projections.*
@@ -9,13 +16,13 @@
 In event-sourced CQRS systems, there is a gap between **command acceptance** and **read model update**:
 
 ```
-POST /api/ventures/initiate
+POST /api/domains/initiate
   -> Command dispatched
   -> Event stored in ReckonDB          (milliseconds)
   -> Projection receives event         (eventual — 10-500ms)
   -> SQLite read model updated         (eventual — depends on load)
 
-GET /api/ventures/:id                  (immediately after POST)
+GET /api/domains/:id                  (immediately after POST)
   -> Queries SQLite read model
   -> 404 Not Found                     (projection hasn't caught up!)
 ```
@@ -52,7 +59,7 @@ The consistency guarantee is scoped to the **caller's session**:
 ## Correct Flow
 
 ```
-POST /api/ventures/initiate
+POST /api/domains/initiate
   -> Command dispatched
   -> Event stored in ReckonDB
   -> Handler returns FEEDBACK with aggregate state
@@ -65,7 +72,7 @@ Caller:
 Meanwhile (async):
   -> Projection processes event
   -> SQLite read model updated
-  -> Other sessions now see the venture
+  -> Other sessions now see the domain
 ```
 
 ---
@@ -73,12 +80,12 @@ Meanwhile (async):
 ## Wrong Flow (Antipattern)
 
 ```
-POST /api/ventures/initiate
+POST /api/domains/initiate
   -> Command dispatched
   -> Returns only {ok, venture_id}
 
 Caller:
-  -> Immediately calls GET /api/ventures/:venture_id    <-- RACE CONDITION
+  -> Immediately calls GET /api/domains/:venture_id    <-- RACE CONDITION
   -> 404 (projection hasn't caught up)
   -> Sets state to null
   -> User sees empty form / "not found"
@@ -121,10 +128,10 @@ dispatch_event(Params, Req) ->
 ### TypeScript: Caller (Svelte Store)
 
 ```typescript
-// Set active venture DIRECTLY from POST response
-const resp = await api.post('/api/ventures/initiate', { name, brief });
+// Set active domain DIRECTLY from POST response
+const resp = await api.post('/api/domains/initiate', { name, brief });
 
-const venture: Venture = {
+const domain: Domain = {
     venture_id: resp.venture_id as string,
     name: resp.name as string,
     brief: (resp.brief as string) ?? null,
@@ -133,7 +140,7 @@ const venture: Venture = {
     // ... all fields from response
 };
 
-activeVenture.set(venture);   // Immediate — no second query
+activeVenture.set(domain);   // Immediate — no second query
 fetchVentures();              // Background refresh — projection catches up
 ```
 
@@ -183,7 +190,7 @@ The projection remains the **source of truth for queries**. Session-level consis
 
 - [HECATE_WALKING_SKELETON.md](HECATE_WALKING_SKELETON.md) — The skeleton's `initiate_*` desk should follow this pattern from day 1
 - [CARTWHEEL.md](CARTWHEEL.md) — CMD department architecture
-- [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md) — Demon #24 (Silent Subscription Pipeline Failures) is a consequence of ignoring this pattern
+- [antipatterns/INDEX.md](../skills/antipatterns/INDEX.md) — Demon #24 (Silent Subscription Pipeline Failures) is a consequence of ignoring this pattern
 
 ---
 

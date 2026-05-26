@@ -1,3 +1,10 @@
+---
+title: "Example: Projection Patterns"
+layer: example
+audience: [agent, human]
+stage: stable
+---
+
 # Example: Projection Patterns
 
 *Canonical example: Transforming domain events into optimized read models*

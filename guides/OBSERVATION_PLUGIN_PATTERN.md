@@ -1,3 +1,10 @@
+---
+title: Observation Plugin Pattern
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Observation Plugin Pattern
 
 _How to build a read-only Hecate plugin that observes another daemon's state._

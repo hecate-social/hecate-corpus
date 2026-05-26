@@ -1,3 +1,10 @@
+---
+title: Implementation Standards
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # CODE_QUALITY.md — Implementation Standards
 
 *Rules for clean, maintainable BEAM code (Erlang and Elixir). These are NON-NEGOTIABLE.*

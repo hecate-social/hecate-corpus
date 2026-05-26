@@ -1,8 +1,15 @@
+---
+title: "ALC: Monitoring -- Observe and Detect"
+layer: philosophy
+audience: [agent, human]
+stage: superseded
+---
+
 # ALC: Monitoring -- Observe and Detect
 
-*Process 7 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 7 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -178,7 +185,7 @@ Categorize findings
     |
     +---> Bugs: fix now, open rescue if severe
     +---> Improvements: feed into next design cycle
-    +---> Features: add to venture backlog
+    +---> Features: add to domain backlog
     +---> Performance rot: open refactoring
     +---> Architectural flaw: escalate to design
 ```
@@ -212,9 +219,9 @@ Monitoring rarely concludes. When it does:
 
 ## Transition
 
-**Inbound:** From [Deployment](HECATE_ALC_DEPLOYMENT.md) (process 6). Deployment concluded, artifact is running.
+**Inbound:** From [Deployment](deployment.md) (process 6). Deployment concluded, artifact is running.
 
-**Outbound:** To [Rescue](HECATE_ALC_RESCUE.md) (process 8) when monitoring detects an incident. To [Design](HECATE_ALC_DESIGN.md) when monitoring reveals architectural issues. To [Refactoring](HECATE_ALC_REFACTORING.md) when monitoring reveals performance rot.
+**Outbound:** To [Rescue](rescue.md) (process 8) when monitoring detects an incident. To [Design](design.md) when monitoring reveals architectural issues. To [Refactoring](refactoring.md) when monitoring reveals performance rot.
 
 **Note:** Monitoring is typically the longest-running ALC process. It does not conclude just because other processes open. A division can have active monitoring *and* active design simultaneously.
 

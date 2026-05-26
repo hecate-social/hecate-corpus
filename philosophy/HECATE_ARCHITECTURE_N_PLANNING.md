@@ -1,8 +1,15 @@
+---
+title: HECATE_AnP
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # HECATE_AnP — Architecture & Planning
 
 *Design the solution before building it.*
 
-**Phase 2 of [HECATE_ALC](HECATE_ALC.md)**
+**Phase 2 of [HECATE_ALC](alc/README.md)**
 
 ---
 

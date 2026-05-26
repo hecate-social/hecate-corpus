@@ -1,3 +1,10 @@
+---
+title: erpc Observer Pattern
+layer: example
+audience: [agent, human]
+stage: stable
+---
+
 # erpc Observer Pattern
 
 _A gen_server that polls another BEAM node for state via erpc._

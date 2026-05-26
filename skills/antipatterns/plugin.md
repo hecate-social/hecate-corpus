@@ -1,3 +1,10 @@
+---
+title: Plugin Antipatterns
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # Plugin Antipatterns
 
 Demons exorcised from real plugin development. Every entry here caused a real bug.

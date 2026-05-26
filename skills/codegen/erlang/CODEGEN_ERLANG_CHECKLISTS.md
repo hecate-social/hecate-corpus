@@ -1,3 +1,10 @@
+---
+title: Generation Checklists
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # CODEGEN_ERLANG_CHECKLISTS.md — Generation Checklists
 
 _Step-by-step checklists for generating Division Architecture (Cartwheel) code._
@@ -54,7 +61,7 @@ apps/{domain}/
 └── rebar.config
 ```
 
-PMs are siblings of desks, not nested. The `on_*/` directories at the top level of `src/` make every cross-domain integration point visible from `ls`. (See [ANTIPATTERNS_STRUCTURE.md Demon 18](../../ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks).)
+PMs are siblings of desks, not nested. The `on_*/` directories at the top level of `src/` make every cross-domain integration point visible from `ls`. (See [antipatterns/structure.md Demon 18](../../antipatterns/structure.md#-demon-18-process-managers-inside-desks).)
 
 ### PRJ Domain App
 
@@ -117,7 +124,7 @@ Every aggregate MUST have a status integer field with AT LEAST these flags:
 Additional flags are domain-specific:
 
 ```erlang
-%% Example: Venture-specific flags
+%% Example: Domain-specific flags
 -define(STATUS_INITIATED, 1).
 -define(STATUS_ACTIVE,    2).
 -define(STATUS_PAUSED,    4).

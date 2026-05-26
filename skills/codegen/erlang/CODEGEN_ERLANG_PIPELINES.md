@@ -1,3 +1,10 @@
+---
+title: "CODEGEN: Erlang Pipelines"
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # CODEGEN: Erlang Pipelines
 
 *Templates and checklists for command pipelines.*

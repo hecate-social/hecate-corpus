@@ -1,6 +1,13 @@
+---
+title: Testing Erlang Templates (TnI Guidelines)
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # Testing Erlang Templates (TnI Guidelines)
 
-Parameterized test templates for Hecate venture lifecycle apps.
+Parameterized test templates for Hecate domain lifecycle apps.
 Proven through `setup_venture` + `query_ventures` pilot (100 tests, 4 layers).
 
 ---
@@ -621,7 +628,7 @@ rebar3 eunit --module=venture_cqrs_integration_tests,venture_projection_tests,de
 
 | App | Store | Main Table | Proxy Module | Query API | Child Tables |
 |-----|-------|-----------|--------------|-----------|-------------|
-| `query_ventures` | `query_ventures_store` | `ventures` | `test_store_proxy` | `get/1` | — |
+| `query_ventures` | `query_ventures_store` | `domains` | `test_store_proxy` | `get/1` | — |
 | `query_discoveries` | `query_discoveries_store` | `discoveries` | `discoveries_test_store_proxy` | `execute/1` | `discovered_divisions` |
 | `query_designs` | `query_designs_store` | `designs` | `designs_test_store_proxy` | `get/1` | `designed_aggregates`, `designed_events` |
 | `query_plans` | `query_plans_store` | `plans` | `plans_test_store_proxy` | `get/1` | `planned_desks`, `planned_dependencies` |

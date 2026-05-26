@@ -1,3 +1,10 @@
+---
+title: Integration Transports
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # Integration Transports
 
 How umbrella apps communicate within hecate-daemon, with hecate-web, and across the network.
@@ -178,7 +185,7 @@ handle_info({events, Events}, State) ->
 handle_info({events, Events}, State) ->
     lists:foreach(fun(E) ->
         Fact = translate_to_fact(E),
-        macula:publish(mesh_pid(), <<"venture.initiated">>, Fact)
+        macula:publish(mesh_pid(), <<"domain.initiated">>, Fact)
     end, Events),
     {noreply, State}.
 ```
@@ -228,7 +235,7 @@ on_venture_initiated_v1_from_pg_project_to_sqlite_ventures.erl
 
 Listeners are NOT centralized — no `listeners/` directory, no `*_listeners_sup`. They are also NOT nested inside the desk they trigger. They sit as siblings of desks under the domain supervisor so the `on_*` directories scream which external events the domain reacts to when you `ls src/`.
 
-> **Decision history:** Earlier guidance (2026-02-08) placed listeners INSIDE the desk they trigger. That was reversed 2026-03-12 / reinforced 2026-05-24 — see [ANTIPATTERNS_STRUCTURE.md Demon 18](../skills/ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks) and [PROCESS_MANAGERS.md Location Rule](PROCESS_MANAGERS.md#location-rule).
+> **Decision history:** Earlier guidance (2026-02-08) placed listeners INSIDE the desk they trigger. That was reversed 2026-03-12 / reinforced 2026-05-24 — see [antipatterns/structure.md Demon 18](../skills/antipatterns/structure.md#-demon-18-process-managers-inside-desks) and [PROCESS_MANAGERS.md Location Rule](PROCESS_MANAGERS.md#location-rule).
 
 ---
 

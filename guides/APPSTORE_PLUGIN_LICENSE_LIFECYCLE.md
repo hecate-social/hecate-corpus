@@ -1,3 +1,10 @@
+---
+title: Appstore License Lifecycle
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Appstore License Lifecycle
 
 _Reference architecture for the hecate-app-appstore plugin._

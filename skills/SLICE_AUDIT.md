@@ -1,3 +1,10 @@
+---
+title: "Auditing CMD & QRY Apps"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # SLICE_AUDIT.md — Auditing CMD & QRY Apps
 
 _A repeatable workflow for reviewing vertical slices in any Hecate CMD or QRY app._
@@ -114,7 +121,7 @@ Every aggregate needs:
 | `initiate_{entity}` | Birth event | No lifecycle, no aggregate |
 | `archive_{entity}` | Soft-delete | Test data pollutes, no undo, unbounded lists |
 
-If archive is missing, flag it. This was learned the hard way (test venture with no archive desk).
+If archive is missing, flag it. This was learned the hard way (test domain with no archive desk).
 
 ### Step 5: Check Projection Coverage
 
@@ -135,7 +142,7 @@ For every table in the QRY store, there should be at least one query desk:
 
 ```
 Store table:          Query desk:              Gap?
-ventures              get_ventures_page        ← OK
+domains              get_ventures_page        ← OK
 discovered_divisions  get_discovered_divisions ← OK
 designed_aggregates   (nothing)                ← MISSING
 planned_desks         (nothing)                ← MISSING
@@ -149,11 +156,11 @@ Every desk is a complete capability with three aspects:
 
 | Aspect | What It Is | Example |
 |--------|-----------|---------|
-| **Inboxes** | Internal (pg) and external (mesh) topics this desk listens for | `discovery_completed_v1` from venture lifecycle |
+| **Inboxes** | Internal (pg) and external (mesh) topics this desk listens for | `discovery_completed_v1` from domain lifecycle |
 | **Policies** | Decision rules: when event/fact arrives → dispatch command? | "When discovery completes, declare expertise with discovered domains" |
 | **Emitters** | Facts this desk publishes to the mesh after success | `expertise_declared_v1` to mesh topic |
 
-**A PM IS its own slice.** A process manager is a sibling of desks in the target CMD app, with its own directory, supervisor, and gen_server. This was reversed from the original (2026-02-12) guidance — see [ANTIPATTERNS_STRUCTURE.md Demon 18](ANTIPATTERNS_STRUCTURE.md#-demon-18-process-managers-inside-desks).
+**A PM IS its own slice.** A process manager is a sibling of desks in the target CMD app, with its own directory, supervisor, and gen_server. This was reversed from the original (2026-02-12) guidance — see [antipatterns/structure.md Demon 18](antipatterns/structure.md#-demon-18-process-managers-inside-desks).
 
 ```
 apps/manage_capabilities/src/

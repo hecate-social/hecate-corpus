@@ -1,3 +1,10 @@
+---
+title: Testing Patterns
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # Testing Patterns
 
 Guidelines for testing hecate-daemon Erlang applications.

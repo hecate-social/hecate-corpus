@@ -1,3 +1,10 @@
+---
+title: The Task Model
+layer: philosophy
+audience: [agent, human]
+stage: draft
+---
+
 # The Task Model — Work as First-Class Citizen
 
 _How Hecate surfaces software development as a list of actionable tasks with AI assistance._
@@ -10,7 +17,7 @@ _How Hecate surfaces software development as a list of actionable tasks with AI 
 
 ## The Insight
 
-The Venture Lifecycle (HECATE_VENTURE_LIFECYCLE.md) defines **10 processes** organized by phase. This is the correct domain model — processes are real, phases are real, divisions are real.
+The Domain Lifecycle (HECATE_DOMAIN_LIFECYCLE.md) defines **10 processes** organized by phase. This is the correct domain model — processes are real, phases are real, divisions are real.
 
 But in the **user experience**, phases are not what the user works with. The user works with **tasks**. A task is a concrete action: "Refine the vision," "Design the Auth Service," "Generate code for the Payment Gateway." The phase is just a property of the task — metadata that determines which AI role assists.
 
@@ -18,14 +25,14 @@ But in the **user experience**, phases are not what the user works with. The use
 
 | Aspect | Phase-Centric (old UX) | Task-Centric (new UX) |
 |--------|----------------------|---------------------|
-| Navigation | Venture → Phase → Division → act | Venture → Task List → pick a task |
+| Navigation | Domain → Phase → Division → act | Domain → Task List → pick a task |
 | First-class citizen | The phase | The task |
 | Phase role | Container to enter | Tag on a task |
 | Division role | Context to switch to | Grouping header in task list |
 | AI assistance | Manual role switching | Auto-attached to task type |
 | What's blocked | Implicit (user guesses) | Explicit (task shows prerequisites) |
 
-**The domain model doesn't change.** The 10 processes, the venture hierarchy, the CMD/QRY/PRJ departments — all unchanged. What changes is how the Dev Studio presents work to the user.
+**The domain model doesn't change.** The 10 processes, the domain hierarchy, the CMD/QRY/PRJ departments — all unchanged. What changes is how the Dev Studio presents work to the user.
 
 ---
 
@@ -38,7 +45,7 @@ Every task has:
 │ Task                                            │
 ├─────────────────────────────────────────────────┤
 │ verb        : "design"                          │
-│ scope       : venture | division                │
+│ scope       : domain | division                │
 │ subject     : "Auth Service" (division name)    │
 │ phase       : AnP                               │
 │ ai_role     : AnP                               │
@@ -123,20 +130,20 @@ Task-specific action desks (chat, confirm, etc.) are separate and only valid whe
 
 ## The Task Catalog
 
-### Venture-Scoped Tasks
+### Domain-Scoped Tasks
 
-These tasks exist once per venture.
+These tasks exist once per domain.
 
 | Task | Verb | AI Role | Prerequisites | Ongoing? |
 |------|------|---------|---------------|----------|
-| **Initiate Venture** | `initiate-venture` | — | None | No |
-| **Refine Vision** | `refine-vision` | DnA | Venture initiated | Yes |
+| **Initiate Domain** | `initiate-domain` | — | None | No |
+| **Refine Vision** | `refine-vision` | DnA | Domain initiated | Yes |
 | **Submit Vision** | `submit-vision` | — | Vision refined | No |
 | **Refine Divisions** | `refine-divisions` | DnA | Vision submitted | Yes |
 
-**Initiate Venture** — Creates the venture. Name, brief description, scaffolding. This is the birth event. No AI needed — it's a form.
+**Initiate Domain** — Creates the domain. Name, brief description, scaffolding. This is the birth event. No AI needed — it's a form.
 
-**Refine Vision** — The user and AI (DnA role) collaborate to shape the venture's vision. What are we building? Why? For whom? What are the constraints? The chat IS the work — the AI asks questions, challenges assumptions, helps crystallize the vision. This task is **ongoing**: the user can return to refine further.
+**Refine Vision** — The user and AI (DnA role) collaborate to shape the domain's vision. What are we building? Why? For whom? What are the constraints? The chat IS the work — the AI asks questions, challenges assumptions, helps crystallize the vision. This task is **ongoing**: the user can return to refine further.
 
 **Submit Vision** — Locks the vision. An explicit confirmation action (button, not a task UI). After submission, the vision document becomes the foundation for division discovery.
 
@@ -179,9 +186,9 @@ The Dev Studio's primary view is the task list. It's a single, scrollable list w
 ### Layout
 
 ```
-Venture: MyProject
+Domain: MyProject
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- ✓  Initiate Venture
+ ✓  Initiate Domain
  ✓  Refine Vision                 🤖 DnA
  ✓  Submit Vision
  ●  Refine Divisions              🤖 DnA
@@ -218,7 +225,7 @@ Venture: MyProject
 
 The task list grows as the user works:
 
-1. **`venture_initiated_v1`** → "Initiate Venture" completes, "Refine Vision" unlocks
+1. **`venture_initiated_v1`** → "Initiate Domain" completes, "Refine Vision" unlocks
 2. **`refine_vision_started_v1`** → task becomes active, AI greets with DnA role
 3. **`vision_submitted_v1`** → "Refine Divisions" unlocks
 4. **`refine_divisions_started_v1`** → user and AI explore the domain
@@ -280,7 +287,7 @@ The chat component is embedded in the task UI. It's both the AI interaction surf
 
 Some tasks don't need AI assistance:
 
-- **Initiate Venture** — A form (name, brief, path). Completes immediately.
+- **Initiate Domain** — A form (name, brief, path). Completes immediately.
 - **Submit Vision** — A confirmation button within the Refine Vision task.
 - **Deploy Division** — May be a confirmation + status view (the deployment itself is automated).
 
@@ -290,10 +297,10 @@ Some tasks don't need AI assistance:
 
 Tasks form a directed acyclic graph. The task engine enforces prerequisites.
 
-### Venture-Level DAG
+### Domain-Level DAG
 
 ```
-initiate-venture
+initiate-domain
        │
        ▼
  refine-vision
@@ -369,11 +376,11 @@ Task-specific actions only work when the task is **active**:
 POST /api/{task}/:id/{action}      → (task-specific event)
 ```
 
-### Venture Lifecycle
+### Domain Lifecycle
 
 ```
 # Initiate (no lifecycle — it's the birth event)
-POST   /api/initiate-venture
+POST   /api/initiate-domain
   Body: { name, brief, path }
   Returns: { venture_id, tasks: [...] }
   Event: venture_initiated_v1
@@ -476,9 +483,9 @@ POST   /api/rescue-division/:id/chat               (only when active)
 ### Task List
 
 ```
-GET    /api/venture/:venture_id/tasks
+GET    /api/domain/:venture_id/tasks
   Returns: {
-    venture: { id, name, vision_status },
+    domain: { id, name, vision_status },
     tasks: [
       {
         verb, scope, subject, phase, ai_role,
@@ -524,7 +531,7 @@ The system prompt for each AI interaction is:
 ---
 [role file]        — The phase-specific role (DnA, AnP, TnI, DnO)
 ---
-[task context]     — Venture name, division name, current state, history
+[task context]     — Domain name, division name, current state, history
 ---
 [task prompt]      — Task-specific instructions (what the AI should focus on)
 ```
@@ -539,7 +546,7 @@ Not all tasks "finish" the same way.
 
 These have a clear end state:
 
-- **Initiate Venture** — Done when venture exists
+- **Initiate Domain** — Done when domain exists
 - **Submit Vision** — Done when confirmed
 - **Generate Division** — Done when code is generated
 - **Test Division** — Done when tests pass
@@ -637,8 +644,8 @@ The Dev Studio does NOT share the LLM Studio's chat. Each AI-assisted task has i
 
 | Document | Relationship |
 |----------|-------------|
-| `HECATE_VENTURE_LIFECYCLE.md` | **Foundation** — The 10 processes and venture hierarchy are unchanged. This document adds the UX layer on top. |
-| `HECATE_ALC.md` | **Evolves** — ALC phases become AI role selectors, not navigation contexts. The four phases (DnA, AnP, TnI, DnO) map to task groups. |
+| `HECATE_DOMAIN_LIFECYCLE.md` | **Foundation** — The 10 processes and domain hierarchy are unchanged. This document adds the UX layer on top. |
+| `alc/README.md` | **Evolves** — ALC phases become AI role selectors, not navigation contexts. The four phases (DnA, AnP, TnI, DnO) map to task groups. |
 | `DDD.md` | **Unchanged** — The Dossier Principle still applies. Each task works on a dossier. |
 | `CARTWHEEL.md` | **Unchanged** — CMD/QRY/PRJ departments are internal architecture, not user-facing. |
 

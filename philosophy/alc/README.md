@@ -1,3 +1,10 @@
+---
+title: The Division Application Lifecycle
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # HECATE ALC -- The Division Application Lifecycle
 
 *Two processes. One chain. Planning feeds crafting.*
@@ -10,7 +17,7 @@
 
 The ALC governs how a **division** (bounded context, cohesive piece of software) evolves from design to delivery. It uses **two independent processes**, each with its own dossier (aggregate), its own event stream, and its own CMD/PRJ/QRY app trio.
 
-The ALC applies to **divisions specifically**. Ventures have their own lifecycle. Nodes run continuously. The division is where craft happens, and the ALC is the rhythm of that craft.
+The ALC applies to **divisions specifically**. Domains have their own lifecycle. Nodes run continuously. The division is where craft happens, and the ALC is the rhythm of that craft.
 
 ---
 
@@ -78,7 +85,7 @@ CONCLUDED = 16
 
 A process that has never been initiated is not yet born. Initiating creates it (usually via process manager). Opening it makes it active. Shelving pauses it. Resuming reactivates it. Concluding completes it and signals readiness for the next process.
 
-See **Demon #16** in [ANTIPATTERNS.md](../skills/ANTIPATTERNS.md) for why generic lifecycle verbs are forbidden.
+See **Demon #16** in [antipatterns/INDEX.md](../../skills/antipatterns/INDEX.md) for why generic lifecycle verbs are forbidden.
 
 ---
 
@@ -122,7 +129,7 @@ guide_venture_lifecycle              guide_division_planning           guide_div
 
 **Query endpoints (QRY):**
 - `GET /api/plannings/:id`
-- `GET /api/ventures/:venture_id/plannings`
+- `GET /api/domains/:venture_id/plannings`
 - `GET /api/plannings`
 
 ---
@@ -152,7 +159,7 @@ guide_venture_lifecycle              guide_division_planning           guide_div
 
 **Query endpoints (QRY):**
 - `GET /api/craftings/:id`
-- `GET /api/ventures/:venture_id/craftings`
+- `GET /api/domains/:venture_id/craftings`
 - `GET /api/craftings`
 
 ---
@@ -169,18 +176,18 @@ The previous 8-process ALC (design, planning, crafting, refactoring, debugging, 
 
 The following per-process detail files describe the old 8-process model and are **superseded** by this document:
 
-- `HECATE_ALC_DESIGN.md` — absorbed into Planning
-- `HECATE_ALC_PLANNING.md` — absorbed into Planning
-- `HECATE_ALC_CRAFTING.md` — absorbed into Crafting
-- `HECATE_ALC_DEBUGGING.md` — absorbed into Crafting
-- `HECATE_ALC_DEPLOYMENT.md` — absorbed into Crafting
-- `HECATE_ALC_MONITORING.md` — operational, not lifecycle
-- `HECATE_ALC_RESCUE.md` — operational, not lifecycle
-- `HECATE_ALC_REFACTORING.md` — operational, not lifecycle
-- `HECATE_DISCOVERY_N_ANALYSIS.md` — old 4-phase naming
-- `HECATE_ARCHITECTURE_N_PLANNING.md` — old 4-phase naming
-- `HECATE_TESTING_N_IMPLEMENTATION.md` — old 4-phase naming
-- `HECATE_DEPLOYMENT_N_OPERATIONS.md` — old 4-phase naming
+- `design.md` — absorbed into Planning
+- `planning.md` — absorbed into Planning
+- `crafting.md` — absorbed into Crafting
+- `debugging.md` — absorbed into Crafting
+- `deployment.md` — absorbed into Crafting
+- `monitoring.md` — operational, not lifecycle
+- `rescue.md` — operational, not lifecycle
+- `refactoring.md` — operational, not lifecycle
+- `../HECATE_DISCOVERY_N_ANALYSIS.md` — old 4-phase naming
+- `../HECATE_ARCHITECTURE_N_PLANNING.md` — old 4-phase naming
+- `../HECATE_TESTING_N_IMPLEMENTATION.md` — old 4-phase naming
+- `../HECATE_DEPLOYMENT_N_OPERATIONS.md` — old 4-phase naming
 
 ---
 
@@ -190,11 +197,11 @@ The ALC is one of three lifecycle types in the Hecate ecosystem:
 
 | Lifecycle | Scope | Nature |
 |-----------|-------|--------|
-| **Venture Lifecycle** | The overall business endeavor | Setup, discovery, orchestration |
+| **Domain Lifecycle** | The overall business endeavor | Setup, discovery, orchestration |
 | **Division ALC** | A single bounded context | The two-process chain described here |
 | **Node Lifecycle** | Infrastructure | Continuous operation, no phases |
 
-See [HECATE_VENTURE_LIFECYCLE.md](HECATE_VENTURE_LIFECYCLE.md) for the venture-level view.
+See [HECATE_DOMAIN_LIFECYCLE.md](../HECATE_DOMAIN_LIFECYCLE.md) for the domain-level view.
 
 ---
 
@@ -202,11 +209,11 @@ See [HECATE_VENTURE_LIFECYCLE.md](HECATE_VENTURE_LIFECYCLE.md) for the venture-l
 
 | Doctrine | Relevance | Description |
 |----------|-----------|-------------|
-| [Walking Skeleton](HECATE_WALKING_SKELETON.md) | Crafting | Fully operational system from day one |
-| [Dossier Principle](DDD.md) | Planning | Process-centric domain modeling |
-| [Vertical Slicing](VERTICAL_SLICING.md) | Planning, Crafting | Features live together, no horizontal layers |
-| [Screaming Architecture](SCREAMING_ARCHITECTURE.md) | Planning, Crafting | Names reveal intent |
-| [Division Model](../guides/CARTWHEEL_COMPANY_MODEL.md) | All | CMD/PRJ/QRY department structure |
+| [Walking Skeleton](../HECATE_WALKING_SKELETON.md) | Crafting | Fully operational system from day one |
+| [Dossier Principle](../DDD.md) | Planning | Process-centric domain modeling |
+| [Vertical Slicing](../VERTICAL_SLICING.md) | Planning, Crafting | Features live together, no horizontal layers |
+| [Screaming Architecture](../SCREAMING_ARCHITECTURE.md) | Planning, Crafting | Names reveal intent |
+| [Division Model](../../guides/CARTWHEEL_COMPANY_MODEL.md) | All | CMD/PRJ/QRY department structure |
 
 ---
 
@@ -225,7 +232,7 @@ When working on a division:
 
 | Term | Meaning | Old Term |
 |------|---------|----------|
-| **Venture** | The overall business endeavor | Torch |
+| **Domain** | The overall business endeavor | Torch |
 | **Division** | A bounded context, cohesive software unit | Cartwheel / Company |
 | **Department** | CMD, PRJ, or QRY within a division | Department |
 | **Desk** | A single capability within a department | Spoke |

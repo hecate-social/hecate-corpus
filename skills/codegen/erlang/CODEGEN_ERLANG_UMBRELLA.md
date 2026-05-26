@@ -1,3 +1,10 @@
+---
+title: Erlang Umbrella Project Layout
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # CODEGEN_ERLANG_UMBRELLA.md — Erlang Umbrella Project Layout
 
 _Correct directory structure for Erlang/OTP umbrella applications._

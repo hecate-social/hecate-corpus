@@ -1,6 +1,13 @@
+---
+title: Testing Erlang Checklists
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # Testing Erlang Checklists
 
-Per-app test coverage checklist and template variable reference for all venture lifecycle apps.
+Per-app test coverage checklist and template variable reference for all domain lifecycle apps.
 
 ---
 
@@ -62,7 +69,7 @@ Per event module:
 - [ ] `query_by_id_found` — returns projected data with all fields
 - [ ] `query_by_id_not_found` — returns `{error, not_found}`
 - [ ] `archive_updates_status` — sets ARCHIVED bit
-- [ ] `page_returns_list` — returns multiple ventures
+- [ ] `page_returns_list` — returns multiple domains
 - [ ] `page_excludes_archived` — default filter hides archived
 - [ ] `page_includes_archived` — filter override shows archived
 - [ ] `page_limit_offset` — pagination works
@@ -115,7 +122,7 @@ Per CMD app (except guide_venture):
 
 | # | App | Store | Table | Source CMD |
 |---|-----|-------|-------|-----------|
-| 1 | `query_ventures` | `query_ventures_store` | `ventures` | `setup_venture` |
+| 1 | `query_ventures` | `query_ventures_store` | `domains` | `setup_venture` |
 | 2 | `query_discoveries` | `query_discoveries_store` | `discoveries` | `discover_divisions` |
 | 3 | `query_designs` | `query_designs_store` | `designs` | `design_division` |
 | 4 | `query_plans` | `query_plans_store` | `plans` | `plan_division` |

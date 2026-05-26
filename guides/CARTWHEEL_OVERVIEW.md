@@ -1,3 +1,10 @@
+---
+title: "Division Architecture: Overview"
+layer: guide
+audience: [agent, human]
+stage: stable
+---
+
 # Division Architecture: Overview
 
 > *Note: "Cartwheel" is the historical name for what is now called "Division Architecture".*

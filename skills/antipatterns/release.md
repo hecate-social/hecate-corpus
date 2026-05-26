@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Release, Testing & Packaging"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Release, Testing & Packaging
 
 *Demons about releases, versioning, hex packaging, testing, and plugin discovery.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 

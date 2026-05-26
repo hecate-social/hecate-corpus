@@ -1,8 +1,15 @@
+---
+title: "ALC: Planning -- Design the Desk Capabilities"
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # ALC: Planning -- Design the Desk Capabilities
 
-*Process 2 of [HECATE_ALC](HECATE_ALC.md)*
+*Process 2 of [HECATE_ALC](README.md)*
 
-[Back to ALC Index](HECATE_ALC.md)
+[Back to ALC Index](README.md)
 
 ---
 
@@ -62,7 +69,7 @@ Command:  conclude_planning_v1   -->  Event: planning_concluded_v1
 | **QRY+PRJ App** | `query_plans` |
 | **Aggregate** | `plan` |
 | **Stream Pattern** | `plan-{division_id}` |
-| **Cardinality** | N per venture (one per division) |
+| **Cardinality** | N per domain (one per division) |
 
 ---
 
@@ -391,7 +398,7 @@ Planning is driven by a guided conversation that produces the desk inventory and
 
 **Planning conversation produces:** desk inventory with capabilities, implementation sequence, PLAN_*.md.
 
-These outputs become the input to [HECATE_ALC_CRAFTING.md](HECATE_ALC_CRAFTING.md).
+These outputs become the input to [alc/crafting.md](crafting.md).
 
 ---
 

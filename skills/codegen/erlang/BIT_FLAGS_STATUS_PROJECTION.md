@@ -1,3 +1,10 @@
+---
+title: Status Handling in Projections
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # BIT_FLAGS_STATUS_PROJECTION.md — Status Handling in Projections
 
 _How to properly handle aggregate status bit flags in Division Architecture._
@@ -224,12 +231,12 @@ guards, always use the `evoq_bit_flags` API.
 
 ### Example 1: Wrong (Read-Time Enrichment)
 
-**Input:** "Project venture_initiated_v1 to SQLite ventures table"
+**Input:** "Project venture_initiated_v1 to SQLite domains table"
 
 **Wrong Output:**
 ```erlang
 project(#{venture_id := VentureId} = Event) ->
-    store:execute("INSERT INTO ventures (venture_id, status) VALUES (?1, ?2)",
+    store:execute("INSERT INTO domains (venture_id, status) VALUES (?1, ?2)",
         [VentureId, 1]).
 
 %% In list_ventures.erl:
@@ -245,7 +252,7 @@ enrich_status(#{status := S} = Row) ->
 
 ### Example 2: Correct (Write-Time Label Storage)
 
-**Input:** "Project venture_initiated_v1 to SQLite ventures table"
+**Input:** "Project venture_initiated_v1 to SQLite domains table"
 
 **Correct Output:**
 ```erlang
@@ -256,7 +263,7 @@ project(Event) ->
     Status = evoq_bit_flags:set_all(0, [?VNT_INITIATED, ?VNT_DNA_ACTIVE]),
     Label = evoq_bit_flags:to_string(Status, ?VNT_FLAG_MAP),
     query_venture_lifecycle_store:execute(
-        "INSERT OR REPLACE INTO ventures (venture_id, status, status_label) VALUES (?1, ?2, ?3)",
+        "INSERT OR REPLACE INTO domains (venture_id, status, status_label) VALUES (?1, ?2, ?3)",
         [VentureId, Status, Label]).
 
 get(Key, Map) when is_atom(Key) ->

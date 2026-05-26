@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Naming"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Naming — Names That Don't Scream
 
 *Demons about naming violations. Names must scream business intent.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 
@@ -77,7 +84,7 @@ Query modules with vague names that don't scream their intent or hide scaling da
 ```
 apps/query_ventures/src/
 ├── get_venture/          # Get by what? ID? Name? Status?
-├── list_ventures/        # Returns ALL ventures? Unbounded!
+├── list_ventures/        # Returns ALL domains? Unbounded!
 └── get_all_divisions/    # "All" is a scaling time bomb
 ```
 
@@ -104,9 +111,9 @@ apps/query_ventures/src/
 
 ```
 apps/query_ventures/src/
-├── get_venture_by_id/        # One venture by primary key
-├── get_active_venture/       # The currently active venture
-├── get_ventures_page/        # Bounded page of ventures
+├── get_venture_by_id/        # One domain by primary key
+├── get_active_venture/       # The currently active domain
+├── get_ventures_page/        # Bounded page of domains
 └── search_ventures/          # Full-text search (also paged)
 ```
 
@@ -121,7 +128,7 @@ apps/query_ventures/src/
 
 > **Query names ARE the API contract. If the name doesn't scream "bounded" and "specific", the query is dangerous.**
 
-Reference: `skills/codegen/erlang/CODEGEN_ERLANG_NAMING.md`
+Reference: `../skills/codegen/erlang/CODEGEN_ERLANG_NAMING.md`
 
 ---
 
@@ -192,7 +199,7 @@ Use a natural completion verb when one exists:
 
 > **DRY is not a virtue when it obscures intent. 16 screaming slices > 4 silent ones.**
 
-See also: [SLICE_AUDIT.md](SLICE_AUDIT.md) for the full audit workflow.
+See also: [SLICE_AUDIT.md](../SLICE_AUDIT.md) for the full audit workflow.
 
 ---
 

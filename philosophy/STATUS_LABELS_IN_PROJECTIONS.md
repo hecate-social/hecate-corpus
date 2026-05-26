@@ -1,4 +1,11 @@
-# STATUS_LABELS_IN_PROJECTIONS.md --- Status Labels Belong in Projections
+---
+title: Status Labels Belong in Projections
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
+# Status Labels Belong in Projections
 
 *Status labels are projections. Projections belong in projections.*
 
@@ -14,7 +21,7 @@
 
 1. **Single source of truth** --- The flag map lives in one place (the Erlang `.hrl` file). If labels change, only the projection logic updates. The frontend doesn't need to know about flag definitions.
 
-2. **No duplication** --- Client-side bit flag constants are a copy of server-side truth. Copies drift. We've already found a bug where frontend venture lifecycle flags (`VL_DISCOVERING=1`) didn't match backend values (`VL_DISCOVERING=8`).
+2. **No duplication** --- Client-side bit flag constants are a copy of server-side truth. Copies drift. We've already found a bug where frontend domain lifecycle flags (`VL_DISCOVERING=1`) didn't match backend values (`VL_DISCOVERING=8`).
 
 3. **Read models serve the view** --- CQRS says read models should be shaped for the view that consumes them. If the UI needs a label, the read model should contain the label. The projection is the right place to compute it.
 

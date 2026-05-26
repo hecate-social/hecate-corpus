@@ -1,6 +1,13 @@
+---
+title: Martha Agent Architecture
+layer: role
+audience: [agent]
+stage: stable
+---
+
 # Martha Agent Architecture
 
-*How AI agents collaborate to guide the venture lifecycle.*
+*How AI agents collaborate to guide the domain lifecycle.*
 
 **Date:** 2026-03-11
 **Status:** Active
@@ -12,7 +19,7 @@
 1. **Minimize cost/token consumption** — use the cheapest model tier that can do the job
 2. **Human-in-the-loop at defined gates** — the human can always intervene, but 5 mandatory gates require explicit approval
 3. **Multi-provider** — agents request a capability tier, not a specific model. `serve_llm` resolves to the best available
-4. **All LLM calls through `serve_llm`** — never direct API calls. Usage tracked per agent/venture/division automatically
+4. **All LLM calls through `serve_llm`** — never direct API calls. Usage tracked per agent/domain/division automatically
 5. **Self-hosted where possible** — Ollama/local models for trivial tasks (free)
 
 ---
@@ -88,7 +95,7 @@ Five mandatory checkpoints where the human must approve before the pipeline adva
 
 | Gate | After | Before | Human Approves |
 |------|-------|--------|----------------|
-| **Vision Gate** | Visionary produces venture brief | Explorer starts discovery | Venture name, vision, brief |
+| **Vision Gate** | Visionary produces domain brief | Explorer starts discovery | Domain name, vision, brief |
 | **Boundary Gate** | Explorer identifies divisions | Stormer begins per-division work | Division names, boundaries, rationale |
 | **Design Gate** | Stormer produces EventStorm per division | Architect translates to technical design | Aggregates, events, desk inventory, dependencies |
 | **Review Gate** | Reviewer examines generated code | Delivery Manager prepares release | Code quality, anti-pattern compliance |
@@ -157,7 +164,7 @@ Agent (Martha plugin)
     }
   → serve_llm resolves tier → best available model
   → Provider dispatches (Anthropic/Groq/Ollama/...)
-  → Usage tracked automatically per agent/venture/division
+  → Usage tracked automatically per agent/domain/division
 ```
 
 Agents never know which model they're talking to. They request a tier, the daemon picks.
@@ -208,4 +215,4 @@ The Mentor operates continuously in three modes:
 
 **Why three modes:** A correction after the Stormer costs 1 message. After the Reviewer it costs rework across 5 agents. Catch early, fix cheap.
 
-Every venture the team builds makes the next venture cheaper, faster, and higher quality. The role files are living documents that encode accumulated wisdom.
+Every domain the team builds makes the next domain cheaper, faster, and higher quality. The role files are living documents that encode accumulated wisdom.

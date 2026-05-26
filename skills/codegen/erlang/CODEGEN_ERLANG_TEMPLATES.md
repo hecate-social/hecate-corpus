@@ -1,3 +1,10 @@
+---
+title: Erlang Code Templates
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # CODEGEN_ERLANG_TEMPLATES.md — Erlang Code Templates
 
 _Complete module templates for generating Division Architecture (Cartwheel) code. Fill variables, generate code._
@@ -7,7 +14,7 @@ _Complete module templates for generating Division Architecture (Cartwheel) code
 **Related files:**
 - [CODEGEN_ERLANG_CHECKLISTS.md](CODEGEN_ERLANG_CHECKLISTS.md) — Generation checklists
 - [CODEGEN_ERLANG_NAMING.md](CODEGEN_ERLANG_NAMING.md) — Naming conventions
-- [ANTIPATTERNS_EVENT_SOURCING.md](../../ANTIPATTERNS_EVENT_SOURCING.md) — canonical reckon-db + evoq wiring (MANDATORY for CMD/PRJ)
+- [antipatterns/event_sourcing.md](../../antipatterns/event_sourcing.md) — canonical reckon-db + evoq wiring (MANDATORY for CMD/PRJ)
 
 ---
 
@@ -1317,7 +1324,7 @@ All routes MUST use the `/api/` prefix.
 - `GET /api/{domain}/:id` — single lookup (e.g., `/api/capabilities/:mri`)
 - `POST /api/{domain}/:id/{verb}` — commands on existing aggregates (e.g., `/api/divisions/:id/transition`)
 
-See [ANTIPATTERNS_STRUCTURE.md](../../ANTIPATTERNS_STRUCTURE.md) Demon #25 for why centralized route files are wrong.
+See [antipatterns/structure.md](../../antipatterns/structure.md) Demon #25 for why centralized route files are wrong.
 
 ---
 

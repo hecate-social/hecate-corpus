@@ -1,3 +1,10 @@
+---
+title: Plugin Scaffold Guide
+layer: codegen
+audience: [codegen]
+stage: stable
+---
+
 # Plugin Scaffold Guide
 
 How to create a new Hecate plugin from scratch. Reference implementation: `hecate-apps/hecate-app-snake-duel`.
@@ -81,7 +88,7 @@ The single source of truth. Lives at repo root, copied into tarball by CI.
 **Critical fields:**
 - `name` = technical routing name (lowercase, hyphenated). Used for API paths: `/plugin/{name}/api/...`
 - `display_name` = human-readable label. Shown in UI. NEVER used for routing.
-- `version` = MUST match git tags. See ANTIPATTERNS_PLUGIN.md Demon #1.
+- `version` = MUST match git tags. See antipatterns/plugin.md Demon #1.
 - `callback_module` = Erlang module implementing `hecate_plugin` behaviour
 - `plugin_type` = `"in_vm"` for BEAM plugins, `"container"` for OCI plugins
 - `tag` = custom element tag name for the frontend component
@@ -473,4 +480,4 @@ Choose the simplest tier that meets your needs.
 6. [ ] Verify CI builds green
 7. [ ] Verify release tarball published on GitHub
 
-**See `skills/ANTIPATTERNS_PLUGIN.md` for common pitfalls.**
+**See `skills/antipatterns/plugin.md` for common pitfalls.**

@@ -6,7 +6,7 @@ phase: continuous — all phases
 context:
   - SOUL.md
   - philosophy/DDD.md
-  - skills/ANTIPATTERNS.md
+  - skills/antipatterns/INDEX.md
   - roles/AGENT_ARCHITECTURE.md
 ---
 
@@ -125,7 +125,7 @@ This is the learning loop — everything observed in modes 1 and 2 feeds into pe
 + - Events MUST carry venture_id and division_id for downstream projections.
 ```
 
-#### skills/ANTIPATTERNS_NAMING.md
+#### skills/antipatterns/naming.md
 ```diff
 + ### Demon #N — "notifications" as a division
 + If a division only reacts to other divisions' events and has no
@@ -141,7 +141,7 @@ This is the learning loop — everything observed in modes 1 and 2 feeds into pe
 
 ## Meta-Principle
 
-The Mentor exists because **the pipeline is a learning system, not a static one**. Every venture the team builds should make the next venture cheaper, faster, and higher quality. The role files are living documents — they encode accumulated wisdom.
+The Mentor exists because **the pipeline is a learning system, not a static one**. Every domain the team builds should make the next domain cheaper, faster, and higher quality. The role files are living documents — they encode accumulated wisdom.
 
 The three modes ensure learning happens at the right time:
 - **Live** — prevent mistakes from propagating (cheapest)

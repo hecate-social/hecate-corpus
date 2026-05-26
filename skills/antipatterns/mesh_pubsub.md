@@ -1,8 +1,15 @@
+---
+title: "ANTIPATTERNS: Mesh Pub/Sub"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # ANTIPATTERNS: Mesh Pub/Sub — The 13-Bug Marathon
 
 *Demons from a single debugging session (2026-03-26) where sending one game announcement across the mesh required 13 fixes. Every link in the chain failed silently.*
 
-[Back to Index](ANTIPATTERNS.md)
+[Back to Index](INDEX.md)
 
 ---
 

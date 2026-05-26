@@ -1,3 +1,10 @@
+---
+title: Command Pipelines
+layer: philosophy
+audience: [agent, human]
+stage: stable
+---
+
 # Command Pipelines
 
 *The chain-of-responsibility that prepares commands so aggregates remain pure functions of state + payload.*
@@ -18,7 +25,7 @@ This invariant has consequences:
 - Event flow never blocks on cross-domain reads.
 - Cross-domain reads are explicit, named, traceable steps — not inline calls in handler code.
 
-This is the structural cure for [Demon 41 (THE Cardinal Sin)](../skills/ANTIPATTERNS_EVENT_SOURCING.md#-demon-41-reading-from-read-models-during-event-flow--the-cardinal-sin).
+This is the structural cure for [Demon 41 (THE Cardinal Sin)](../skills/antipatterns/event_sourcing.md#-demon-41-reading-from-read-models-during-event-flow--the-cardinal-sin).
 
 ---
 
@@ -149,7 +156,7 @@ Enrichment splits into two:
 - **Payload** — data the aggregate decides on (`permit_id`, `fee_amount`, `session_status`). Part of the command. Becomes part of the event.
 - **Metadata** — provenance (snapshot timestamps, source projection, query duration, filter chain ID). Lives in a separate metadata block.
 
-Never `maps:merge` them. [Demon 37 (Flattening Event Envelopes into Business Data)](../skills/ANTIPATTERNS_EVENT_SOURCING.md) is real and silent.
+Never `maps:merge` them. [Demon 37 (Flattening Event Envelopes into Business Data)](../skills/antipatterns/event_sourcing.md) is real and silent.
 
 Convention: ctx keys under a reserved `'__meta'` map get serialized into the dispatched command's `metadata` field by the runner just before handing off to the aggregate.
 
@@ -202,7 +209,7 @@ If your idempotency step uses the post-enrichment command as its key, retries wi
 
 ## Connection to Other Concepts
 
-- **Cardinal sin cure.** This pattern is the structural cure for [Demon 41](../skills/ANTIPATTERNS_EVENT_SOURCING.md#-demon-41-reading-from-read-models-during-event-flow--the-cardinal-sin). Aggregates that need external data get it via pipeline, never by reading during event flow.
+- **Cardinal sin cure.** This pattern is the structural cure for [Demon 41](../skills/antipatterns/event_sourcing.md#-demon-41-reading-from-read-models-during-event-flow--the-cardinal-sin). Aggregates that need external data get it via pipeline, never by reading during event flow.
 - **PM placement.** PMs live as sibling slices in the target CMD app (see [PROCESS_MANAGERS.md](PROCESS_MANAGERS.md)). The pipeline lives in those slices alongside the gen_server and supervisor.
 - **Session consistency.** Enrichment timestamps in metadata enable downstream consumers to reason about freshness, which underpins [Session-Level Consistency](SESSION_LEVEL_CONSISTENCY.md).
 - **Mesh boundary.** Across facilities, enrichment reads from local denormalized projections of mesh-published facts — not from cross-WAN RPCs. The local projection IS the enrichment cache.
@@ -238,4 +245,4 @@ See `reckon-db-org/evoq/proposals/PROPOSAL_EVOQ_PIPELINE.md` for the framework-l
 
 ---
 
-*Date: 2026-05-25. Pattern introduced to resolve [Demon 41](../skills/ANTIPATTERNS_EVENT_SOURCING.md#-demon-41-reading-from-read-models-during-event-flow--the-cardinal-sin) for the hecate-parksim family and generalized as a framework-level pattern.*
+*Date: 2026-05-25. Pattern introduced to resolve [Demon 41](../skills/antipatterns/event_sourcing.md#-demon-41-reading-from-read-models-during-event-flow--the-cardinal-sin) for the hecate-parksim family and generalized as a framework-level pattern.*

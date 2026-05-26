@@ -1,3 +1,10 @@
+---
+title: "Side Effects Must Follow Facts, Not Hopes"
+layer: skill
+audience: [agent, human]
+stage: stable
+---
+
 # Side Effects Must Follow Facts, Not Hopes
 
 *An architectural pattern for client-daemon communication.*
