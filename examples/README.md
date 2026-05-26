@@ -29,6 +29,7 @@ This directory contains well-documented examples of correct patterns used in the
 | [MESH_INTEGRATION.md](MESH_INTEGRATION.md) | Emitter/Listener | FACTS vs EVENTS, cross-agent communication, command layer |
 | [PROJECTIONS.md](PROJECTIONS.md) | Read models | Event → read model, naming, SQLite patterns |
 | [BIT_FLAGS_STATUS.md](BIT_FLAGS_STATUS.md) | Aggregate status | Integer bit flags, evoq_bit_flags API, efficient queries |
+| [DCB_COUNTER.md](DCB_COUNTER.md) | Decision vs Aggregate | `evoq_decision` for cross-cutting checks (uniqueness, allocation, rate limits) |
 
 **Moved to philosophy/ (core patterns, not just examples):**
 - [PROCESS_MANAGERS.md](../philosophy/PROCESS_MANAGERS.md) — Cross-domain coordination
