@@ -172,18 +172,36 @@ See [`../examples/DCB_COUNTER.md`](../examples/DCB_COUNTER.md) for the canonical
 
 ### Stack reference
 
+**BEAM layer** (Erlang/Elixir callers):
+
 | Repo | Version | What it ships |
 |------|---------|---------------|
-| reckon-gater | 2.3.0 | `tag_filter()` + `seq_cutoff()` types, `append_if_no_tag_matches/4` wire verb |
-| reckon-db | 3.1.0 | Khepri-transaction primitive + `/by_tag/{tag}/{seq}` tag index + gateway dispatch |
-| reckon-evoq | 2.2.0 | Adapter passthrough |
-| evoq | 1.18.0 | `evoq_decision` behaviour + `evoq_decision_runtime:dispatch/3` |
+| reckon-gater | 2.3.1 | `tag_filter()` + `seq_cutoff()` types, `append_if_no_tag_matches/4` wire verb |
+| reckon-db | 3.1.1 | Khepri-transaction primitive + `/by_tag/{tag}/{seq}` tag index + gateway dispatch + HMAC chain on integrity-enabled stores |
+| reckon-evoq | 2.2.1 | Adapter passthrough |
+| evoq | 1.19.0 | `evoq_decision` behaviour + `evoq_decision_runtime:dispatch/3` + compound filter algebra |
+
+**Polyglot layer** (Go, .NET, Rust, Python over gRPC):
+
+| Repo | Version | What it ships |
+|------|---------|---------------|
+| reckon-proto | 0.4.0 | `DcbService` proto + recursive `TagFilter` oneof |
+| reckon-gateway | 0.7.0 | `DcbService` handler — translates proto → `reckon_gater_api:append_if_no_tag_matches/4` |
+| reckon-go | (current main) | `dcb` package with `MatchAny` / `MatchAll` / `And` / `Or` filter constructors; `(committed, conflict, err)` return signature on `Append` |
+
+**Operator tooling**:
+
+| Repo | Version | What it ships |
+|------|---------|---------------|
+| reckon-lazy | (current main) | `DCB` badge next to the `_dcb` pseudo-stream in the TUI's streams mode |
 
 ### Known v1 limitations
 
 - **Compound filters at the evoq layer shipped 2026-05-27 (evoq 1.19.0).** `context/1` can return `{any_of, [Tag]}`, `{all_of, [Tag]}`, or any recursive nesting via `{and_, [Filter]}` / `{or_, [Filter]}` matching the backend's `tag_filter()` exactly. The runtime collects the union of referenced tags, reads broadly via `read_by_tags`, and refines client-side using per-event semantics.
 - **DCB-stream only.** The runtime considers events under the `<<"_dcb">>` pseudo-stream when computing the cutoff. Mixed-mode use cases (aggregate streams + DCB sharing tags) are unsupported — use `evoq_aggregate` for per-aggregate, `evoq_decision` for pure cross-cutting.
 - **HMAC chain shipped 2026-05-27.** DCB events on integrity-enabled stores carry `prev_event_hash` + `mac` linked from genesis. Implementation uses outside-the-transaction MAC pre-computation with inside-the-transaction chain-tip + counter verification (Horus rejects `crypto:*` inside transaction bodies). Concurrent-writer contention on the chain tip is bounded by `?INTEGRITY_RETRY_BUDGET = 5`; exhaustion surfaces as `{error, dcb_concurrent_writer_exhausted}`. Tampering detection works via the existing `reckon_gater_integrity:verify_event/3`.
+- **Polyglot Decision shipped 2026-05-27.** reckon-proto 0.4.0 adds `DcbService` with `AppendIfNoTagMatches` + `ReadDcbContext` RPCs. reckon-gateway 0.7.0 implements the handler. Conflict is a structured `oneof { Committed | Conflict }` response, NOT a gRPC error — Go callers get `(committed, conflict, err)` via the `dcb` package wrapper. Pre-DCB backing clusters (reckon-db &lt; 3.1.1) surface as `UNIMPLEMENTED`.
+- **No server-side Decision runtime over gRPC.** Polyglot callers orchestrate the read/decide/write loop themselves; the gateway exposes raw primitives, not a `DecideAndAppend` server-side wrapper. The BEAM-side `evoq_decision_runtime:dispatch/3` is currently the only place that combines the three steps. A polyglot equivalent is parked until real usage shows what shape clients want.
 - **No options API.** Retry budget set via `retry_budget/0` callback only; no per-call options map yet.
 
 None of these block normal Decision use — they're flagged so callers know the edges.

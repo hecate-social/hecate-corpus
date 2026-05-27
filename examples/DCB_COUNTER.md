@@ -255,7 +255,7 @@ analytics.
 - **Default retry budget = 3.** Override via `retry_budget/0` callback.
   Heavy contention should escalate to the caller rather than spin
   indefinitely.
-- **HMAC chain shipped 2026-05-27 (reckon-db 3.1.0).** DCB events on
+- **HMAC chain shipped 2026-05-27 (reckon-db 3.1.1).** DCB events on
   integrity-enabled stores carry `prev_event_hash` + `mac` linked
   from genesis. Implementation pre-computes MAC chains outside the
   transaction (Horus extractor rejects `crypto:*` in transaction
