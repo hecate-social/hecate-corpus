@@ -183,7 +183,7 @@ See [`../examples/DCB_COUNTER.md`](../examples/DCB_COUNTER.md) for the canonical
 
 - **Flat filters only at the evoq layer.** `context/1` returns `{any_of, [Tag]}` or `{all_of, [Tag]}`. Compound `and_`/`or_` filters work at the backend's conditional-append check but aren't yet plumbed through the runtime's read path.
 - **DCB-stream only.** The runtime considers events under the `<<"_dcb">>` pseudo-stream when computing the cutoff. Mixed-mode use cases (aggregate streams + DCB sharing tags) are unsupported — use `evoq_aggregate` for per-aggregate, `evoq_decision` for pure cross-cutting.
-- **No HMAC chain on DCB events yet.** Integrity for DCB events ships in a v2 follow-up. Stores with integrity enabled reject DCB writes with `{error, integrity_not_supported_in_dcb_v1}` (fail-closed, not silent-tamper-exposed).
+- **HMAC chain shipped 2026-05-27.** DCB events on integrity-enabled stores carry `prev_event_hash` + `mac` linked from genesis. Implementation uses outside-the-transaction MAC pre-computation with inside-the-transaction chain-tip + counter verification (Horus rejects `crypto:*` inside transaction bodies). Concurrent-writer contention on the chain tip is bounded by `?INTEGRITY_RETRY_BUDGET = 5`; exhaustion surfaces as `{error, dcb_concurrent_writer_exhausted}`. Tampering detection works via the existing `reckon_gater_integrity:verify_event/3`.
 - **No options API.** Retry budget set via `retry_budget/0` callback only; no per-call options map yet.
 
 None of these block normal Decision use — they're flagged so callers know the edges.

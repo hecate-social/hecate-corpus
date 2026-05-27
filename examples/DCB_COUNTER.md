@@ -253,10 +253,15 @@ analytics.
 - **Default retry budget = 3.** Override via `retry_budget/0` callback.
   Heavy contention should escalate to the caller rather than spin
   indefinitely.
-- **No HMAC chain on DCB events yet.** Integrity for DCB events ships
-  in a v2 follow-up. Until then, integrity-enabled stores reject DCB
-  writes with `{error, integrity_not_supported_in_dcb_v1}` (fail-closed,
-  not silent-tamper-exposed).
+- **HMAC chain shipped 2026-05-27 (reckon-db 3.1.0).** DCB events on
+  integrity-enabled stores carry `prev_event_hash` + `mac` linked
+  from genesis. Implementation pre-computes MAC chains outside the
+  transaction (Horus extractor rejects `crypto:*` in transaction
+  bodies); the transaction verifies the chain-tip + counter still
+  match. Concurrent-writer contention on the chain tip retries up
+  to `?INTEGRITY_RETRY_BUDGET = 5` times; exhaustion surfaces as
+  `{error, dcb_concurrent_writer_exhausted}` and the caller should
+  back off + retry the whole dispatch.
 
 ---
 
