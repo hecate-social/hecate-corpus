@@ -129,18 +129,64 @@ Until one of these is true, the position holds. ReckonDB ships tags and tag-filt
 
 ---
 
-## How "Decision" might fit if the position ever changes
+## Decision — active capability (shipped 2026-05-27)
 
-Reserving terminology in advance, so a future shift doesn't fragment vocabulary:
+**Updated 2026-05-27.** This section previously described Decision as a reserved-but-unimplemented term. That position changed: between P3.0 and P3.9 (one focused build sprint, see `reckon-db-org/reckon-db/plans/PLAN_DCB_IMPLEMENTATION.md`), the full four-repo stack landed and Decision became a first-class user-facing construct alongside Dossier.
 
-If we ever add query-based concurrency to ReckonDB, the corresponding user-level abstraction in Evoq would be `evoq_decision` (alongside `evoq_aggregate`). At the 5D level, **Decision** would sit alongside Dossier as a sibling write-side construct:
+### What sits alongside Dossier now
 
-- **Dossier** — has identity, has lifetime, lives in a stream, owns a folder. The default.
-- **Decision** — has a context query, no identity, no lifetime. Used for cross-cutting checks. Events still tagged + projected like any other.
+| | **Dossier** | **Decision** |
+|---|-------------|--------------|
+| Identity | Yes — stream id | No |
+| Lifetime | Yes (initiate → conclude → archive) | No |
+| Folder home | Yes — one folder per Dossier | No — stateless behaviour module |
+| Concurrency primitive | Stream-version optimistic concurrency | Tag-filter context-query optimistic concurrency |
+| Erlang behaviour | `evoq_aggregate` | `evoq_decision` |
+| Storage append | `append_events/3,4` | `append_if_no_tag_matches/4` |
+| When to reach for it | The work has a natural "thing" with state and history | The work is cross-cutting (uniqueness, allocation, idempotency, rate limits) |
+| Discrimination rule | Default for ~90% of business work | Escape hatch for the ~10% genuinely cross-cutting case |
 
-Both produce events. Both feed projections. The difference is whether identity-and-lifetime are first-class.
+Both produce events. Both feed projections. Both flow through the same store. The difference is whether identity-and-lifetime are first-class for the consistency boundary.
 
-No code today implements `Decision`. The name is reserved for the day (if it comes) when the position changes.
+### Discrimination rule: when to reach for which
+
+**Use a Dossier when:**
+
+- The work has a natural identity-carrier (a customer, an order, a division)
+- There's a lifecycle (something starts, something ends)
+- Multiple Desks contribute to the same instance over time
+- You want one folder in the codebase that screams what it is
+
+**Use a Decision when:**
+
+- The consistency check is uniqueness across many things (email, MRI, idempotency key)
+- The consistency check is allocation against a shared resource (seats, slots, quotas)
+- The consistency check is a count/window over recent activity (rate limits, anti-fraud)
+- There's no natural "thing" to hang the work on, and inventing one would be ceremony
+
+If you're tempted to invent a "registry aggregate" (e.g., `email_uniqueness_aggregate` that owns all emails) to satisfy an aggregate-first architecture, that's the tell — use a Decision instead.
+
+### Reference example
+
+See [`../examples/DCB_COUNTER.md`](../examples/DCB_COUNTER.md) for the canonical walkthrough: a counter that respects a maximum, implemented as an `evoq_decision`, with the concurrent-contention test showing 100 procs racing on `max=10` and exactly 10 succeeding.
+
+### Stack reference
+
+| Repo | Version | What it ships |
+|------|---------|---------------|
+| reckon-gater | 2.3.0 | `tag_filter()` + `seq_cutoff()` types, `append_if_no_tag_matches/4` wire verb |
+| reckon-db | 3.1.0 | Khepri-transaction primitive + `/by_tag/{tag}/{seq}` tag index + gateway dispatch |
+| reckon-evoq | 2.2.0 | Adapter passthrough |
+| evoq | 1.18.0 | `evoq_decision` behaviour + `evoq_decision_runtime:dispatch/3` |
+
+### Known v1 limitations
+
+- **Flat filters only at the evoq layer.** `context/1` returns `{any_of, [Tag]}` or `{all_of, [Tag]}`. Compound `and_`/`or_` filters work at the backend's conditional-append check but aren't yet plumbed through the runtime's read path.
+- **DCB-stream only.** The runtime considers events under the `<<"_dcb">>` pseudo-stream when computing the cutoff. Mixed-mode use cases (aggregate streams + DCB sharing tags) are unsupported — use `evoq_aggregate` for per-aggregate, `evoq_decision` for pure cross-cutting.
+- **No HMAC chain on DCB events yet.** Integrity for DCB events ships in a v2 follow-up. Stores with integrity enabled reject DCB writes with `{error, integrity_not_supported_in_dcb_v1}` (fail-closed, not silent-tamper-exposed).
+- **No options API.** Retry budget set via `retry_budget/0` callback only; no per-call options map yet.
+
+None of these block normal Decision use — they're flagged so callers know the edges.
 
 ---
 
@@ -165,4 +211,4 @@ No code today implements `Decision`. The name is reserved for the day (if it com
 
 ---
 
-*The Dossier is the cornerstone. The Decision is reserved.*
+*The Dossier is the cornerstone. The Decision is the escape hatch.*

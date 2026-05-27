@@ -121,13 +121,17 @@ A Slip is what a Desk adds to a Dossier. It carries a subset of the Dossier's st
 
 | Synonym | Event |
 
-### Decision (reserved term)
+### Decision
 
-A sibling write-side construct to the Dossier, **reserved but not implemented**. A Decision would write an event conditional on a tag-filter context query, rather than on a stream version. It has no identity, no lifetime, no folder. Used for cross-cutting checks (uniqueness, allocation, idempotency) where the Dossier shape is genuinely wrong.
+A sibling write-side construct to the Dossier. A Decision writes events conditional on a tag-filter context query rather than on a stream version. It has no identity, no lifetime, no folder. Used for cross-cutting checks (uniqueness, allocation, idempotency, rate limits) where the Dossier shape is genuinely wrong.
 
-| Status | Reserved. No code implements this today. |
-| Would map to | `evoq_decision` behaviour in Evoq + `append_if_no_tag_matches` primitive in ReckonDB |
-| Why reserved | To prevent vocabulary fragmentation if the position on query-based concurrency ever changes. See [philosophy/CONSISTENCY_BOUNDARIES.md](philosophy/CONSISTENCY_BOUNDARIES.md). |
+| Status | **Active (2026-05-27)**. Shipped across the four-repo stack: reckon-gater 2.3.0, reckon-db 3.1.0, reckon-evoq 2.2.0, evoq 1.18.0. |
+| User-facing API | `evoq_decision` behaviour + `evoq_decision_runtime:dispatch/3` |
+| Storage primitive | `append_if_no_tag_matches/4` on reckon-db's `?DCB_STREAM` |
+| Reference example | [examples/DCB_COUNTER.md](examples/DCB_COUNTER.md) — counter respecting a maximum |
+| When to use | Cross-cutting decisions without a natural identity-carrier. See [philosophy/CONSISTENCY_BOUNDARIES.md](philosophy/CONSISTENCY_BOUNDARIES.md) for the full discrimination rule. |
+
+The Dossier remains the default for ~90% of business work (anything with a natural "thing" — customers, orders, divisions, plannings). Decision is the escape hatch for the ~10% genuinely cross-cutting case. Both are first-class.
 
 ### Process
 

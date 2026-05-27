@@ -619,6 +619,26 @@ See [philosophy/COMMAND_PIPELINES.md](../../philosophy/COMMAND_PIPELINES.md) for
 
 The two cures stack: **enrich the event at the source** when data is local, **enrich the command via pipeline** when data is cross-domain. Together they keep aggregates pure and PMs free of read-model lookups.
 
+### Demon 41 and `evoq_decision`
+
+`evoq_decision` (DCB, shipped 2026-05-27) does NOT have Demon 41. The reason is structural: a Decision has no "inside" to leak read-model access into. Its callback shape is:
+
+```erlang
+context(Command) -> tag_filter().                   %% define the read
+decide(ContextEvents, Command) -> {ok, [Event]}.    %% pure function on the read result
+```
+
+The runtime explicitly reads context events BEFORE calling `decide/2`. The decision function sees its context as input, not as something to fetch. There's no event-handler context to misuse, no projection to query mid-flow.
+
+The corresponding hazard for Decisions is `{error, retry_budget_exhausted}` — unbounded retries on `{error, {context_changed, _}}`. The runtime's bounded retry budget (default 3) prevents the equivalent of "I'll just keep retrying until the projection catches up." That's the analogous foot-gun for Decisions: caller blindly retries `retry_budget_exhausted` instead of escalating.
+
+| Construct | Cardinal hazard | Cure |
+|-----------|----------------|------|
+| `evoq_aggregate` | Reading read models during event flow (Demon 41) | Command Pipelines + event enrichment at source |
+| `evoq_decision` | Unbounded retry on `context_changed` | Bounded retry budget (built into the runtime) + escalate to caller |
+
+See [philosophy/CONSISTENCY_BOUNDARIES.md](../../philosophy/CONSISTENCY_BOUNDARIES.md) for when to reach for Decision instead of Aggregate.
+
 ---
 
 ## 🔥 Aggregate `apply/2` Sees Two Event Shapes (and `execute/2` Must Not Pre-Wrap `data`)

@@ -362,6 +362,28 @@ The 5D Hierarchy works at every scale.
 
 This is the property that makes the 5D Hierarchy worth memorizing. You learn it once. It applies forever.
 
+#### Two write-side constructs
+
+The Dossier is the **default** write-side construct. It locks on its own stream's version — classical event-sourcing optimistic concurrency. ~90% of Hecate work fits the Dossier shape: anything with a natural identity-carrier (customers, orders, divisions, plannings, capabilities).
+
+The remaining ~10% — cross-cutting checks without a natural identity-carrier (uniqueness, allocation against shared resources, idempotency keys, rate limits) — has a sibling first-class construct: the **Decision**. A Decision locks on the absence of new events matching a tag-filter context query, not on a stream version. It has no identity, no lifetime, no folder. It's the escape hatch for the cross-cutting case where inventing a Dossier would be ceremony.
+
+| | Dossier | Decision |
+|---|---------|----------|
+| Has identity | yes | no |
+| Has lifetime | yes | no |
+| Has a folder home | yes | no — stateless behaviour module |
+| Concurrency unit | stream version | tag-filter context query |
+| Erlang behaviour | `evoq_aggregate` | `evoq_decision` |
+| Storage append | `append_events` | `append_if_no_tag_matches` |
+| Use case | the work has a natural "thing" | the work is cross-cutting |
+
+Both produce Slips. Both feed projections. Both flow through the same store. The difference is whether identity-and-lifetime are first-class for the consistency boundary.
+
+For the discrimination rule + examples, see `philosophy/CONSISTENCY_BOUNDARIES.md` and the reference walkthrough at `examples/DCB_COUNTER.md`.
+
+The 5D mnemonic doesn't change. Domain / Division / Department / Desk are the four nested containers; Dossier is the artifact that flows through them. Decision is a sibling write-side construct, not a sixth D.
+
 ### What it replaces
 
 The traditional "layered architecture" model — Presentation, Application, Domain, Infrastructure — fails the four-questions test. Layers do not scream. Layers scatter features. Layers think in objects, not processes. Layers are clever, not strict.
@@ -370,10 +392,12 @@ The 5D Hierarchy is the alternative. Containers, not layers. Process, not object
 
 ### Read also
 
-- `GLOSSARY.md` — full definitions, including the Domain override notice
+- `GLOSSARY.md` — full definitions, including the Domain override notice and the active Decision entry
 - `philosophy/CARTWHEEL.md` — Department detail (CMD/PRJ/QRY structure)
 - `philosophy/HECATE_DOMAIN_LIFECYCLE.md` — Domain → Division relationship and process model
+- `philosophy/CONSISTENCY_BOUNDARIES.md` — the discrimination rule between Dossier and Decision, with revisit criteria
 - `guides/CARTWHEEL_COMPANY_MODEL.md` — the company-metaphor variant of the 5D model
+- `examples/DCB_COUNTER.md` — reference example for the Decision pattern (counter respecting a maximum)
 
 ---
 
