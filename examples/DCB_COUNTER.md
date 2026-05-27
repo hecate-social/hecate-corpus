@@ -241,10 +241,12 @@ analytics.
 
 ## v1 Limitations Worth Knowing
 
-- **Flat filters only.** `context/1` returns `{any_of, [Tag]}` or
-  `{all_of, [Tag]}`. Compound filters (`and_`, `or_`) work at the
-  backend's conditional-append check but aren't yet plumbed through
-  the runtime's read path.
+- **Compound filters shipped 2026-05-27 (evoq 1.19.0).** `context/1`
+  can return `{any_of, [Tag]}`, `{all_of, [Tag]}`, or any recursive
+  nesting via `{and_, [Filter]}` / `{or_, [Filter]}`. The runtime
+  plumbs compound filters through the read path: walks the tree,
+  reads tag-union once, refines client-side. Empty `{and_, []}` /
+  `{or_, []}` short-circuits to an empty context, no read.
 - **DCB-stream only.** The runtime considers events written via
   `evoq_decision` (under the `<<"_dcb">>` pseudo-stream) when computing
   the cutoff. Aggregate-stream events tagged the same way are visible
