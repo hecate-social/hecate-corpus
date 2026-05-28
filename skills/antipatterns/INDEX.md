@@ -64,6 +64,7 @@ stage: reversed
 | 47 | Eager Peer Connection Explosion | Persistent peer_system per discovered peer → 692 handlers on 4 nodes | 2026-03-26 |
 | **48** | **DEBUG Logging on Critical Failure Paths** | **"Found 0 subscribers" at DEBUG level — failures invisible in production** | **2026-03-26** |
 | **49** | **Discarding `evoq_dispatcher:dispatch/2`'s Return Value** | **`_ = dispatch(...)` throws away the only error channel — events vanish silently** | **2026-05-26** |
+| **50** | **Daemon-as-Mesh-Middleman** | **L2-shaped work bridged through `hecate-daemon`'s `/api/mesh/publish` — wrong identity, wrong layer dependency, defeats reckon-db** | **2026-05-28** |
 
 ---
 
@@ -103,7 +104,7 @@ Demons #12, #22, #31, #32. Projection timing, manual event emission, inline proj
 
 ### [antipatterns/integration.md](integration.md) — Subscriptions, Messaging, Process Managers
 
-Demons #7, #11, #15, #24, #26, #39. pg vs mesh, hope acknowledgments, command IDs, subscription pipeline failures, emitter lifecycle, and bypassing evoq behaviours.
+Demons #7, #11, #15, #24, #26, #39, **#50**. pg vs mesh, hope acknowledgments, command IDs, subscription pipeline failures, emitter lifecycle, bypassing evoq behaviours, and **bridging L2-shaped work through hecate-daemon's REST API instead of using the Macula SDK directly**.
 
 ### [antipatterns/erlang.md](erlang.md) — Erlang/OTP Gotchas
 

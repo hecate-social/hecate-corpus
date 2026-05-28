@@ -528,4 +528,157 @@ Before writing ANY module that handles domain events:
 
 ---
 
+## 🔥 Demon 50: Daemon-as-Mesh-Middleman
+
+**Date:** 2026-05-28
+**Origin:** First-draft `venus-macula` skeleton (deleted same session)
+
+### The Antipattern
+
+A Layer-2-shaped service (vendor adapter, file watcher, smart-meter
+readout, …) gets the mesh via HTTP POSTs to `hecate-daemon`'s
+`/api/mesh/publish` instead of via the Macula SDK directly.
+
+**Example (WRONG):**
+
+```
+[Cerbo GX]
+  dbus-flashmq MQTT N/<portal>/<svc>/<inst>/<path>
+       │
+       ▼
+  venus-macula (Python sidecar on the GX)
+       │ POST {topic, fact}
+       ▼
+  hecate-daemon /api/mesh/publish          ← Layer-3 daemon
+       │                                     forced into being
+       ▼                                     the bridge
+  Macula mesh
+```
+
+The Python script subscribes to the local broker, transforms each
+notification, and POSTs it to the daemon's REST API. The daemon
+then dispatches a `publish_mesh_fact_v1` command, stores an event in
+its own reckon-db, and emits to the mesh asynchronously.
+
+It looks reasonable until you list what's wrong with it.
+
+### Why It's Wrong
+
+1. **Wrong identity shape.** The fact is published under
+   `hecate-daemon`'s identity — anonymous or per-user. The data
+   source is a non-human always-on appliance; the correct mesh
+   identity is a **realm-signed service principal**, not whatever
+   user the laptop's daemon was configured for.
+2. **Wrong layer dependency.** L2-shaped work now depends on L3
+   being installed, configured, joined to a realm, and running.
+   An L2 service needs no daemon. It uses the Macula SDK against
+   its local `macula-station`.
+3. **Defeats reckon-db offline-first.** The daemon's reckon-db
+   buffers — but that's the daemon's store, indexed by the
+   daemon's domain. The vendor data has no canonical local stream
+   of its own. Restarts replay the wrong events; queries hit the
+   wrong tables.
+4. **Wrong contract surface.** `/api/mesh/publish` validates
+   `{topic, fact}` as opaque JSON. The L2 service has actual
+   business events (`victron_reading_recorded_v1`, with stream
+   IDs, versioning, projections). The HTTP boundary throws away
+   the schema.
+5. **HTTP latency for nothing.** Local TCP + JSON roundtrip per
+   message, when SDK pub/sub is a `gen_server:cast` away.
+6. **Tier confusion.** Cements the misconception that L2 services
+   are sidecars riding on L3. They are not. They are
+   institutions of the realm with their own credentials, their
+   own stores, their own lifecycle.
+
+### The Rule
+
+> **L2 services connect directly to their local `macula-station`
+> via the Macula SDK. They do not bridge through `hecate-daemon`.**
+>
+> The daemon's `/api/mesh/*` HTTP API is for:
+> - Layer-4 plugins inside the daemon's BEAM
+> - External integrations like `macula-mcp` (stdio MCP server)
+> - Quick scripts and one-off agents that don't justify a release
+>
+> An L2 service is never any of those.
+
+### The Correct Pattern
+
+```
+[Cerbo GX on the LAN]
+  dbus-flashmq MQTT
+       │
+       ▼ (TCP, LAN-local)
+[Realm infrastructure node — or lone-deployment host]
+  hecate-victron (Layer-2 service, OCI container)
+       │
+       │ subscriber slice ──► command ──► reckon-db
+       │                                    │
+       │                                    ▼
+       │                          victron_reading_recorded_v1
+       │                                    │
+       │                       on_victron_reading_recorded_to_mesh
+       │                       (emitter, evoq_event_handler,
+       │                        async, retries forever)
+       │                                    │
+       ▼                                    ▼
+  macula-station (local)  ◄────────── macula:publish/3
+       │
+       ▼
+  Macula relay mesh
+```
+
+- Service-principal cert at
+  `/etc/hecate/secrets/hecate-victron/service-cert.pem`
+- `hecate_om_service` behaviour
+- `store_id/0` + `data_dir/0` optional callbacks → reckon-db
+  auto-wired
+- Inbound writes (mesh → Cerbo) are advertised via
+  `macula:advertise/5`; the responder slice dispatches a write
+  command, the emitter projects to the Cerbo's `W/...` MQTT
+  topic.
+
+### Worked Example: venus-macula → hecate-victron (2026-05-28)
+
+A first-draft `codeberg.org/macula-io/venus-macula` repo
+followed the wrong pattern: Python sidecar POSTing to the local
+`hecate-daemon`'s `/api/mesh/publish`. It was deleted within a
+day and refrained as `codeberg.org/hecate-services/hecate-victron`
+following this antipattern's correct pattern. Three reasons made
+the switch immediately worth it:
+
+1. The Cerbo GX is headless infrastructure, not a user laptop —
+   running a Layer-3 daemon there violates tier semantics.
+2. Vendor data publishes under a realm-signed service principal,
+   not under an inherited user identity.
+3. Reckon-db offline-first is built into `hecate_om_service` —
+   no reason to skip it.
+
+See memory `[[project-track-a-eu-open-energy-axis]]` for the
+broader context and the OpenEMS sibling design (`hecate-openems`).
+
+### Detecting It
+
+If you see any of these in code or in a design doc, you have this
+demon:
+
+- A Python / shell / non-BEAM script that POSTs to `/api/mesh/*`
+  to do the work of an "adapter" or "bridge" or "connector"
+- A `hecate_X` repo that does not depend on `hecate_om` but does
+  depend on `hecate-daemon`'s HTTP port being open
+- A "sidecar" that turns an external data source into mesh facts
+  but lives outside `hecate-services/`
+- A README explaining how the adapter "publishes via the daemon"
+
+### The Meta-Lesson
+
+> **L2 work goes in L2 services. The daemon is an L3 plugin host,
+> not a publish gateway. When you're tempted to bridge through
+> `/api/mesh/publish`, ask: "Is this an always-on institution of
+> the realm, or a per-user plugin?" If the former, it belongs in
+> `hecate-services/`. If the latter, write it as an L4 plugin
+> inside the daemon's BEAM, not as an external HTTP client.**
+
+---
+
 *We burned these demons so you don't have to. Keep the fire going.*

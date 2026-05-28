@@ -85,6 +85,10 @@ When deciding where a new capability belongs, walk the list:
 - Maps to one of the four workload classes
 - Holds shared mutable state that survives sessions
 - Has its own external dependency (API keys, model weights, …)
+- Translates an external data source (vendor MQTT, file watcher,
+  smart-meter readout, IoT gateway, …) into mesh facts. These
+  **ingestion adapters** are L2 by default — never L3 sidecars or
+  L4 plugins. See "Offline operation via reckon-db" below.
 
 **App (Layer 4)** if **all** of:
 
@@ -150,6 +154,62 @@ The substrate library [`hecate-om`](https://codeberg.org/hecate-services/hecate-
 provides 1, 7, and 8 for free. Services just implement the
 behaviour and wire their `_mesh_rpc.erl` dispatch table.
 
+## Offline operation via reckon-db
+
+Layer-2 services are not assumed to be online all the time. The
+mesh has connectivity gaps (relay restarts, fleet bounces, network
+partitions, intermittent ISPs, sites that come online only when a
+ship enters port). A service whose ingest path blocks on mesh
+reachability is brittle.
+
+The canonical pattern: **every L2 service that ingests external
+data owns a reckon-db store**. Inbound data becomes a command →
+domain event → local stream. A separate emitter slice drains the
+stream to the mesh asynchronously, retrying forever. The ingest
+path never observes mesh state.
+
+```
+external source ──► subscriber slice ──► command
+                                            │
+                                            ▼
+                                  reckon-db (local stream)
+                                            │
+                                ┌───────────┴────────────┐
+                                ▼                        ▼
+                       on_event_to_mesh         other projections /
+                       (emitter, async,         process managers
+                        drains when station
+                        is mesh-reachable)
+                                │
+                                ▼
+                        macula:publish/3
+```
+
+The substrate already supports this directly. `hecate_om_service`
+declares two optional callbacks:
+
+```erlang
+-callback store_id() -> atom().     %% the service's reckon-db store id
+-callback data_dir() -> string().   %% on-disk root for the store
+```
+
+When both are exported, `hecate_om:boot/1` starts a `single`-mode
+reckon-db store at `<data_dir>/<store_id>/` and an evoq subscription
+**before** the service's own `start/1` fires. Producer-only services
+(no event store) omit both callbacks and pay nothing.
+
+**Consequences:**
+
+- Boat goes offline two weeks → events accumulate locally → station
+  reaches marina wifi → emitter drains backlog → realm subscribers
+  catch up. Same code, no special branch.
+- Restarting the service replays from the reckon-db stream. No data
+  loss across restarts, container migrations, or host moves.
+- Naive buffering / `try ... catch macula:publish` retries in handler
+  code are an **antipattern**. The store IS the buffer.
+- Ingestion adapters (Cut criteria item above) should ship with
+  these callbacks declared from v0.1, not v0.2.
+
 ## Identity model
 
 Services are **institutions** of the realm, not user-bound. Each
@@ -193,6 +253,43 @@ Three things this model explicitly forbids:
    bus, no central registry, no horizontal layer of "service
    plumbing". The realm coordinates through Macula RPC, not a
    service framework.
+4. **No bridging L2-shaped work through `hecate-daemon`'s REST
+   API.** The daemon's `/api/mesh/publish`, `/api/mesh/call`, etc.
+   are for Layer-4 plugins inside the daemon's BEAM and for
+   external integrations like `macula-mcp`. An L2 service uses
+   the Macula SDK directly against its local `macula-station` —
+   no HTTP middleman, no L3 dependency, correct identity. See
+   `skills/antipatterns/integration.md` Demon 50.
+
+## Lone-deployment exception
+
+The default rule above ("NOT on user laptops") stands for every
+multi-user, federated, or community context. For **genuinely
+infrastructure-less** deployments — a boat at sea, an RV off-grid,
+a single-household pilot before a cooperative exists — a Layer-2
+service MAY be hosted on user-owned hardware (a laptop, a Cerbo, a
+home NUC) provided **all** of:
+
+1. The service has its own **service-principal credential**, not
+   borrowed from the user's citizen cert. Even a household realm
+   of one issues a separate badge for the service.
+2. The service is **not user-session-keyed.** It runs whenever the
+   host is up, not "when the user is logged in". `systemd --user`
+   with linger-enabled, a Quadlet under root, or a Venus-OS runit
+   slot all qualify; "starts when I open my laptop" does not.
+3. The service principal still **chains to a realm root** — no
+   self-rooted leaves, even in lone deployments. The realm may
+   be small (one household, one boat); it must exist.
+4. The manifest carries `deployment: lone` (or operational
+   equivalent) so future operators know to migrate the service
+   onto shared realm infrastructure when it becomes available.
+
+This exception exists so that ingestion adapters and similar L2
+services can run in scenarios that have **no community node yet**
+(the lone phase of a future cooperative). It is not a license to
+host community services on member laptops once a cooperative
+infrastructure node exists. When in doubt, move it to the shared
+node.
 
 ## How callers reach services
 
@@ -252,6 +349,11 @@ Future watchlist (not yet built):
 - `hecate-tools` — agent tool surfaces (web_fetch, web_search,
   synthesize_speech, transcribe_audio, …) — the bits dropped from
   `hecate-llm`'s extract on 2026-05-18
+- `hecate-victron` — Victron Venus OS ingestion adapter
+  (dbus-flashmq MQTT → mesh facts; reckon-db offline-first)
+- `hecate-openems` — OpenEMS Edge ingestion adapter
+  (JSON-RPC over WS → mesh facts; reckon-db offline-first)
+- `hecate-shelly` — Shelly Pro local-MQTT ingestion adapter
 
 ## Reading order for a new contributor
 
