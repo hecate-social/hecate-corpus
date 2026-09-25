@@ -92,6 +92,7 @@ stage: reversed
 | **66** | **An Unadmitted Service Subscribes Successfully and Receives Nothing** | **Client-side subscribe succeeds (sub_ref held) while the realm refuses routing until the provider grant is issued — held refs, zero facts, zero errors, green health** | **2026-09-25** |
 | **67** | **An Invalid Stream Id Raises in the Store Client** | **Dispatch to a bad stream id crashes the aggregate into a restart loop and hangs the registry's synchronous start call — the error never returns; the desk must validate BEFORE dispatch, not only inside the aggregate** | **2026-09-25** |
 | **68** | **The Flag→Name Map That Exists Nowhere** | **Status flags live in the CMD status module and the readable names live as SQL literals scattered across N projections, with nothing mapping one to the other — evoq_bit_flags:to_string/2 plus a flag map is the bridge; a projection spelling a status literal is the relapse, refused by a source-grep test. And: when one division needs another's pure functions, depend on the module, never on the app — booting the CMD app into a projection test env drags its mesh emitters in and silently stalls $all delivery** | **2026-09-25** |
+| **69** | **Two Providers, One Procedure, One Station — the Registry Holds One** | **A station's advertise registry keys on `(realm, procedure)` and holds ONE advertiser (last direct ADVERTISE wins), so two providers of one procedure that name the same serving station are not both dialable — the SDK names the pool's first-connected link (map-term order = alphabetical host name, not seed order, so seed rotation cannot steer it); the displaced club's CALL is answered by the other club (no target check on inbound CALLs), the caller refuses the mis-signed reply, and a failover that collapsed the timeout into `no_provider` sent the diagnosis into the resolve path. Fix: per-node serving-station choice, `no_provider` reserved for "nothing to dial", and a two-provider live fixture** | **2026-09-25** |
 
 ---
 
@@ -160,6 +161,17 @@ demon to this index**, because it is about why adding one is not enough.
 ### [antipatterns/mesh_pubsub.md](mesh_pubsub.md) — Mesh Pub/Sub: The 13-Bug Marathon
 
 Demons #42, #43, #44, #45, #46, #47, #48, **#66**. Silent catch-alls, dual registries, payload wrapper assumptions, fire-once publishing, missing subscription replay, eager connection explosion, and invisible DEBUG logging. All from a single debugging session where one game announcement needed 13 fixes to cross the mesh — plus **the unadmitted service that subscribed successfully and received nothing: client-side subscribe succeeds while the realm gates routing until the provider grant is issued**.
+
+### [antipatterns/mesh_capabilities.md](mesh_capabilities.md) — Mesh Capability Advertisement
+
+Demon **#69**. Advertising and resolving capabilities: the station's advertise
+registry holds ONE advertiser per `(realm, procedure)` — last direct ADVERTISE
+wins — so two providers of one procedure must name different serving stations;
+the SDK's first-connected-link choice is map-term order (alphabetical host
+name, not seed order), the pin reaches only the most recent advertiser, and a
+failover that folds the dial timeout into `no_provider` sends the diagnosis to
+the wrong layer. Per-node serving-station choice, `no_provider` reserved for
+"nothing to dial", and a two-provider live fixture are the cure.
 
 ### [antipatterns/documentation.md](documentation.md) — History Narration in Operational Docs
 
