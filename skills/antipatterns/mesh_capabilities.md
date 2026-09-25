@@ -68,11 +68,19 @@ Three mechanisms, one per layer of the lie:
    per node, stable across republish ticks, distinct whenever there are
    stations to spare. Unit-tested with the two clubs' REAL node ids as
    the regression: they must land apart.
-2. **`no_provider` means exactly "nothing to dial"** (mcl_om 0.29.0): a
+2. **The wire registration goes ONLY to the serving station** (0.29.1 —
+   the spread alone was not enough): the SDK's default advertise fans the
+   ADVERTISE frame out to EVERY connected link, so providers on
+   overlapping station sets keep fighting over every SHARED station's
+   registry even when their records name distinct stations (live on
+   beam03: the pinned calls kept flapping). The `advertise` opt
+   registers the handler on just the one link, so each station's
+   registry holds exactly its own providers.
+3. **`no_provider` means exactly "nothing to dial"** (mcl_om 0.29.0): a
    provider that was dialed reports its own failure (`{error, timeout}`,
    `{error, {station_endpoint, _}}`, …). A stale pin still fails closed
    as `no_provider` — the two can never be confused again.
-3. **The fixture that would have caught it**:
+4. **The fixture that would have caught it**:
    `mcl_om_capabilities_two_providers_tests` (live, real station): two
    providers under one org — both records resolve, the pin dials the
    named (most recent) advertiser, a stale pin fails closed, and the
@@ -81,10 +89,12 @@ Three mechanisms, one per layer of the lie:
 ### The Rule
 
 > **A station's registry holds ONE advertiser per `(realm, procedure)`;
-> "one procedure, many providers" is true only across stations.**
-> **Pick the serving station per node, not per pool — and never let a
-> dial failure answer like a resolve miss, or the diagnosis follows the
-> lie.**
+> "one procedure, many providers" is true only across stations — and
+> only if each provider registers its handler at ITS station, not at
+> every station its pool links to.**
+> **Pick the serving station per node, register only there, and never
+> let a dial failure answer like a resolve miss, or the diagnosis
+> follows the lie.**
 
 ---
 
