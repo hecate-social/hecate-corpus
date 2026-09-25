@@ -630,6 +630,16 @@ See [philosophy/COMMAND_PIPELINES.md](../../philosophy/COMMAND_PIPELINES.md) for
 
 The two cures stack: **enrich the event at the source** when data is local, **enrich the command via pipeline** when data is cross-domain. Together they keep aggregates pure and PMs free of read-model lookups.
 
+And the cure has a SECOND boundary that re-impoverishes if you let it: the
+**fact module**. `mcl-bookclub`'s `book_retired_v1` event echoed
+`procured_at` (the fold's birth details), but its `mcl_bookclub_facts`
+module dropped the field, and the observer's absolute-REPLACE supersede
+write needed it — another consumer-side silent skip until the fact was
+enriched (2026-09-25). Enrich the event at the source AND carry the
+enrichment through the fact: whatever a downstream consumer's absolute
+write needs, the fact must carry, or the same demon reappears one
+boundary later.
+
 ### Demon 41 and `evoq_decision`
 
 `evoq_decision` (DCB, shipped 2026-05-27) does NOT have Demon 41. The reason is structural: a Decision has no "inside" to leak read-model access into. Its callback shape is:
@@ -861,6 +871,68 @@ A test that catches this: `evoq_cmd_case:assert_valid_stream_id/1`
 (evoq-testkit) runs the reckon_gater guard against the id the aggregate
 would actually use. **mem-evoq does NOT enforce the regex**, so without
 this explicit assertion a Layer-B test passes while production rejects.
+
+---
+
+## 🔥 Demon 67: An Invalid Stream Id Raises in the Store Client
+
+**Date exorcised:** 2026-09-25
+**Where it appeared:** `macula-services/mcl-bookclub`'s desk tests — the
+`a_rejected_stream_id_never_touches_the_store` rehearsal written as part of
+the teaching suite
+**Cost:** An aggregate crash-looping under its supervisor and a registry
+call that hung until the test's own timeout — an afternoon chasing a
+graceful `{error, _}` that never comes.
+
+### The Lie
+
+"An invalid stream id will be refused with `{error, invalid_stream_id}`,
+like any other validation error, and the caller will see it."
+
+### What Happened
+
+evoq starts the aggregate for *any* id — the id is not validated on the
+dispatch path. The aggregate's history read then goes to the store client
+(reckon-gater), which **raises** `{invalid_stream_id, _}` rather than
+returning it. The raise crashes the aggregate, its supervisor restarts it,
+the restart re-reads, it raises again — a restart loop — and
+`evoq_aggregate_registry`'s synchronous start call hangs waiting for an
+aggregate that never becomes ready. The caller never receives an error;
+it receives a timeout, if anything.
+
+This is Demon 51's sharper sibling: there, the id failed the regex and a
+bare `catch` ate the rejection; here, the rejection is an *exception in
+another process*, and no amount of correct error handling on the caller's
+side can catch it — only validating before the dispatch reaches the store
+can.
+
+### The Fix
+
+Validate at the dispatch boundary, in every desk's `dispatch/1`, BEFORE
+the command is built or handed to evoq — `validate`-then-dispatch — and
+keep the aggregate-side `validate/1` as defence in depth for entry points
+that do not go through the desk's dispatch. mcl-bookclub's desks all
+follow the shape:
+
+```erlang
+dispatch(Cmd) ->
+    case some_command_v1:validate(Cmd) of
+        ok -> do_dispatch(Cmd);
+        {error, Reason} -> {error, Reason}
+    end.
+```
+
+The mechanism that refuses a relapse: the test that asserts the raise it
+prevents — `?assertError({invalid_stream_id, _}, store_read(BadId))` —
+proving the store client's behaviour is what the boundary guard exists
+for, not a matter of style.
+
+### The Rule
+
+> **The store client raises; it does not answer.** The desk is the
+> boundary: `dispatch/1` validates the stream id BEFORE anything touches
+> evoq, because a raise inside the aggregate is a crash loop the caller
+> can never be handed. A test that asserts the raise is the mechanism.
 
 ---
 

@@ -530,4 +530,52 @@ Not another line in a document — a test that fails.
 
 ---
 
+## 🔥🔥 Demon 65: Mesh Pubsub Facts Arrive `{text, Bin}`-Keyed — Demon 60's Atomization Was RPC, Not Pubsub
+
+**Date exorcised:** 2026-09-25
+**Where it appeared:** `macula-services/mcl-bookclub-observer`'s three fact
+policies (`on_member_registered_fact_maybe_record` and siblings), first fleet
+rollout — the consumer half of mcl-bookclub's mesh facts
+**Cost:** A full live-debugging session on beam03. The mesh delivered every
+fact; the observer recorded nothing. Zero errors anywhere — the policies
+skipped the facts as malformed and `skip` is silent by design.
+
+### The Lie
+
+"Demon 60 says the frame decoder atomizes inbound payload keys, so a pubsub
+fact's map has atom keys — I can `maps:get(member_id, Fact)`."
+
+### What Happened
+
+Demon 60's atomization was the **RPC** wire. The **pubsub** wire is different:
+a fact's payload arrives with its keys as `{text, Bin}` tuples — the frame
+decoder does NOT atomize them — and its string values `{text, Bin}`-wrapped.
+The policies read `maps:get(Key, Fact, maps:get(atom_to_binary(Key), Fact,
+undefined))` — atom, then binary, both missing — fell through to `skip`, and
+"skip a malformed fact" is the *correct* behaviour for the wrong reason, so
+nothing logged anything.
+
+The probe that broke the case open: subscribe **and** publish to the same
+topic in one eval on the live node. The fresh subscriber received the event —
+delivery was fine, the wired subscriber's parse was not. The event's payload
+showed the truth directly: `#{{text, <<"key">>} => 1}`.
+
+### The Fix
+
+Read every mesh fact with `mcl_om_wire:field/2`, which resolves the atom,
+binary and `{text, Bin}` key forms AND unwraps the value in one call — the
+listeners pass the payload through untouched, the policies take what field/2
+gives them. The mechanism that refuses a relapse is a test feeding the exact
+wire shape a live subscriber receives, `{text, Bin}` keys and values included:
+a hand-rolled `maps:get` fails it on the first run.
+
+### The Rule
+
+> **Demon 60 covers RPC. Pubsub payloads are keyed `{text, Bin}`.**
+> **Never hand-roll a `maps:get` over a mesh payload — `mcl_om_wire:field/2`
+> is the one tool for both shapes, and a test that feeds the live wire
+> shape is what keeps the two demons from being re-exorcised a third time.**
+
+---
+
 *We burned these demons so you don't have to. Keep the fire going.*

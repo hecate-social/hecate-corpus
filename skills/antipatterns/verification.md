@@ -308,6 +308,29 @@ the code under test.
 
 ---
 
+## The Addendum to Demon 62 (2026-09-25): Four Pins That Agree Can All Disagree With the Fleet
+
+The scaffold template pinned its builder/runtime image pair in four places —
+Containerfile, lint workflow, `.tool-versions`, and a generated guard test
+that compared all four against the running VM — and that test was green,
+every time, while the pair itself (hexpm/alpine) had already been retired
+from the fleet standard (the macula-ci-images team pair) and 16 of 17
+services had moved. mcl-bookclub was scaffolded from the stale template and
+shipped the retired pair, guard tests all passing.
+
+The shape is Demon 62's: a test that passes for a different layer's reason.
+The guard proved **internal agreement** — N copies of the same wrong choice
+agree with each other — while the claim it seemed to make ("the runtime is
+pinned to the team standard") needed agreement with something *outside* the
+repository, which no self-comparison can prove.
+
+The mechanism that caught it was a one-liner against the estate, not against
+the repo: a fleet-wide grep of every Containerfile's `FROM` line compared to
+the team pair's tag and digest. A pin guard proves the pins agree; only a
+comparison against the outside proves they are right.
+
+---
+
 ## The Session This File Came From
 
 2026-08-07, one working day, one author. Findings: an archipelago whose attack

@@ -384,4 +384,47 @@ mesh_pubsub_e2e_test() ->
 
 ---
 
+## 🔥 Demon 66: An Unadmitted Service Subscribes Successfully and Receives Nothing
+
+**Date exorcised:** 2026-09-25
+**Where it appeared:** `macula-services/mcl-bookclub-observer`'s first fleet
+rollout on beam03, before the realm admitted its provider claim
+**Cost:** Two live end-to-end attempts read as broken while the code was
+fine — the diagnosis order was wrong, not the software.
+
+### The Lie
+
+"My subscriber holds a sub_ref and the pool is connected, so the
+subscription is wired and facts will flow."
+
+### What Happened
+
+The observer's claim was still pending at the realm. Its subscribers
+started, subscribed on the pool, held their refs — every local check said
+"subscribed". The realm, meanwhile, refused to route publications to it,
+and it received nothing. No error, no log line, and `/health` said `ok`
+with the grants reported as `waiting` — a line nobody thought to read
+because every *local* signal was green.
+
+The diagnosis order that wasted the time: checked the publishers (the
+bookclub's emitters, publishing fine), checked the wiring (refs held),
+checked the pool (connected), re-published, re-started — before the realm
+was admitted and the *same unchanged code* started receiving facts. The
+grant was the gate all along.
+
+### The Rule
+
+> **When mesh fact delivery is silently zero, read `/health`'s
+> `provider_grants` FIRST — a `waiting` grant means the realm is the gate,
+> not the code.** Then, to tell a delivery gap from a parse bug in one
+> shot: subscribe and publish to the same topic in a single eval on the
+> live node. If the fresh subscriber gets the event, delivery is fine and
+> the consumer's parse is the suspect (see Demon 65).
+
+The mechanism is already shipped: mcl_om's `/health` reports every
+procedure's grant state. The lesson is the order — grants first, then the
+fresh-subscribe probe, then the code.
+
+---
+
 *13 demons exorcised in one session. Each one hiding behind the last. The lesson isn't "fix bugs faster" — it's "test the chain, not the links."*

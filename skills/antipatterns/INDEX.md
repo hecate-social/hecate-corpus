@@ -88,6 +88,9 @@ stage: reversed
 | 62 | A Test That Passes For a Different Layer's Reason | A TTL-config-passthrough test slept past `expires_at` and asserted the doc was gone — passed even with the passthrough completely stubbed out, because barrel_docdb's own reads treat expired docs as gone unconditionally, sweep config or not. Caught by stubbing the fix and demanding RED first | 2026-09-05 |
 | 63 | Existence Mistaken for Freshness in a Build Cache | `build-nifs.sh` skipped recompiling a NIF whenever the `.so` already existed — no comparison against source mtime, so every "clean eunit" that day silently tested a stale binary, once for a real security fix. A force-rebuild env var was also dead code because the existence check ran before it was ever consulted | 2026-09-05 |
 | 64 | A Split Name Doesn't Mean a Split Namespace | A rename to fix a PyPI collision kept the old import name, citing beautifulsoup4/bs4 as precedent — but bs4 is a name nothing else uses, while the kept name WAS the colliding package's own real import namespace. A human's one question caught it; nobody checked before that | 2026-09-05 |
+| **65** | **Mesh Pubsub Facts Arrive `{text, Bin}`-Keyed** | **The frame decoder does NOT atomize pubsub payload keys — Demon 60's atomization was RPC args. A hand-rolled `maps:get` skips every fact while the mesh delivers everything; the observer recorded nothing with zero errors** | **2026-09-25** |
+| **66** | **An Unadmitted Service Subscribes Successfully and Receives Nothing** | **Client-side subscribe succeeds (sub_ref held) while the realm refuses routing until the provider grant is issued — held refs, zero facts, zero errors, green health** | **2026-09-25** |
+| **67** | **An Invalid Stream Id Raises in the Store Client** | **Dispatch to a bad stream id crashes the aggregate into a restart loop and hangs the registry's synchronous start call — the error never returns; the desk must validate BEFORE dispatch, not only inside the aggregate** | **2026-09-25** |
 
 ---
 
@@ -128,7 +131,7 @@ Demons #2, #4, #5, #9. Errors in modeling aggregate lifecycles, parent-child rel
 
 ### [antipatterns/event_sourcing.md](event_sourcing.md) — Aggregates, Events, Envelopes
 
-Demons #10, #23, #33, #34, #37, #40, **#41**, #49, **#51**. Aggregate callback order, event record handling, evoq+reckondb requirements, map key types, envelope flattening, envelope field extraction, **reading from read models during event flow (THE cardinal sin)**, discarding `evoq_dispatcher:dispatch/2`'s return value (the only error channel), and **human-readable aggregate ids that fail the reckon stream-id regex while a bare `catch` hides the rejection**.
+Demons #10, #23, #33, #34, #37, #40, **#41**, #49, **#51**, **#67**. Aggregate callback order, event record handling, evoq+reckondb requirements, map key types, envelope flattening, envelope field extraction, **reading from read models during event flow (THE cardinal sin)**, discarding `evoq_dispatcher:dispatch/2`'s return value (the only error channel), **human-readable aggregate ids that fail the reckon stream-id regex while a bare `catch` hides the rejection**, and **an invalid stream id that RAISES in the store client — the aggregate crash-loops and the registry call hangs, so the desk must validate before dispatch, not only inside the aggregate**.
 
 ### [antipatterns/projections.md](projections.md) — Projections & Read Models
 
@@ -140,7 +143,7 @@ Demons #7, #11, #15, #24, #26, #39, **#50**. pg vs mesh, hope acknowledgments, c
 
 ### [antipatterns/erlang.md](erlang.md) — Erlang/OTP Gotchas
 
-Demons #19, #20, #21, #35, #38, **#60**, **#61**. esqlite3 return types and argument order, eager map defaults, gen_server self-call deadlocks, emoji literals in SQL, **a mesh RPC payload whose keys arrive as atoms AND whose CBOR text-string values arrive wrapped in a `{text, Bin}` tuple**, and **barrel writes that store a document without indexing it — including the ordinary read-modify-write, since `get_doc` never hands back the `_embedding` it needs to keep**.
+Demons #19, #20, #21, #35, #38, **#60**, **#61**, **#65**. esqlite3 return types and argument order, eager map defaults, gen_server self-call deadlocks, emoji literals in SQL, **a mesh RPC payload whose keys arrive as atoms AND whose CBOR text-string values arrive wrapped in a `{text, Bin}` tuple**, **barrel writes that store a document without indexing it — including the ordinary read-modify-write, since `get_doc` never hands back the `_embedding` it needs to keep**, and **a mesh pubsub payload whose keys arrive as `{text, Bin}` tuples — Demon 60's atomization was RPC, not pubsub, so a hand-rolled `maps:get` skips every fact while the mesh delivers**.
 
 ### [antipatterns/release.md](release.md) — Release, Testing & Packaging
 
@@ -155,7 +158,7 @@ demon to this index**, because it is about why adding one is not enough.
 
 ### [antipatterns/mesh_pubsub.md](mesh_pubsub.md) — Mesh Pub/Sub: The 13-Bug Marathon
 
-Demons #42, #43, #44, #45, #46, #47, #48. Silent catch-alls, dual registries, payload wrapper assumptions, fire-once publishing, missing subscription replay, eager connection explosion, and invisible DEBUG logging. All from a single debugging session where one game announcement needed 13 fixes to cross the mesh.
+Demons #42, #43, #44, #45, #46, #47, #48, **#66**. Silent catch-alls, dual registries, payload wrapper assumptions, fire-once publishing, missing subscription replay, eager connection explosion, and invisible DEBUG logging. All from a single debugging session where one game announcement needed 13 fixes to cross the mesh — plus **the unadmitted service that subscribed successfully and received nothing: client-side subscribe succeeds while the realm gates routing until the provider grant is issued**.
 
 ### [antipatterns/documentation.md](documentation.md) — History Narration in Operational Docs
 
