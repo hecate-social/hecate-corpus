@@ -91,6 +91,7 @@ stage: reversed
 | **65** | **Mesh Pubsub Facts Arrive `{text, Bin}`-Keyed** | **The frame decoder does NOT atomize pubsub payload keys — Demon 60's atomization was RPC args. A hand-rolled `maps:get` skips every fact while the mesh delivers everything; the observer recorded nothing with zero errors** | **2026-09-25** |
 | **66** | **An Unadmitted Service Subscribes Successfully and Receives Nothing** | **Client-side subscribe succeeds (sub_ref held) while the realm refuses routing until the provider grant is issued — held refs, zero facts, zero errors, green health** | **2026-09-25** |
 | **67** | **An Invalid Stream Id Raises in the Store Client** | **Dispatch to a bad stream id crashes the aggregate into a restart loop and hangs the registry's synchronous start call — the error never returns; the desk must validate BEFORE dispatch, not only inside the aggregate** | **2026-09-25** |
+| **68** | **The Flag→Name Map That Exists Nowhere** | **Status flags live in the CMD status module and the readable names live as SQL literals scattered across N projections, with nothing mapping one to the other — evoq_bit_flags:to_string/2 plus a flag map is the bridge; a projection spelling a status literal is the relapse, refused by a source-grep test. And: when one division needs another's pure functions, depend on the module, never on the app — booting the CMD app into a projection test env drags its mesh emitters in and silently stalls $all delivery** | **2026-09-25** |
 
 ---
 
@@ -135,7 +136,7 @@ Demons #10, #23, #33, #34, #37, #40, **#41**, #49, **#51**, **#67**. Aggregate c
 
 ### [antipatterns/projections.md](projections.md) — Projections & Read Models
 
-Demons #12, #22, #31, #32. Projection timing, manual event emission, inline projections, and PRJ/QRY separation.
+Demons #12, #22, #31, #32, **#68**. Projection timing, manual event emission, inline projections, PRJ/QRY separation, and **the flag→name map that exists nowhere: status bits in the CMD status module, readable names as literals scattered across the projections, evoq_bit_flags:to_string/2 + a flag map as the unread bridge — and the trap where "depending on the CMD app" (not just its pure modules) boots mesh emitters into a projection test env and silently stalls $all delivery**.
 
 ### [antipatterns/integration.md](integration.md) — Subscriptions, Messaging, Process Managers
 

@@ -439,4 +439,93 @@ Before adding a new projection, verify:
 
 ---
 
+## 🔥 Demon 68: The Flag→Name Map That Exists Nowhere
+
+**Date exorcised:** 2026-09-25
+**Where it appeared:** `macula-services/mcl-bookclub` and its Elixir twin
+`macula-services/mcl-bookclub-phoenix` — eight projections across the two
+repos, written in one session each
+**Cost:** Two vocabularies (the bits in CMD, the names in PRJ) coupled by
+convention and nothing else; the library function that exists exactly as
+the bridge between them was never read before the code that needed it was
+written. The naive repair — declaring the CMD app as a PRJ dependency —
+booted the mesh emitters into the projection test env and silently stalled
+the $all delivery every projection depends on.
+
+### The Lie
+
+"Each projection writing its own readable status string IS the house rule:
+computed at projection time, never at query time. The literal IS the
+computation."
+
+### What Happened
+
+The aggregate's status module owned the raw flags — "this header is the
+only place raw flags exist" — while each projection spelled the readable
+name out as its own SQL literal, keyed off the event type it folds:
+`'active'`, `'archived'`, `'on_shelf'`, `'retired'`, `'in_progress'`,
+`'finished'`, `'unregistered'`. Nothing, anywhere, mapped a flag to its
+name. `evoq_bit_flags:to_string/2` exists precisely as that bridge — a
+flag map plus the conversion — and it was never read before the
+projections were written; the "translation" the module comments described
+was prose, not code. A rename or a new status means hunting literals
+across every projection, and the one module that claims to own the flags
+does not own what they mean.
+
+The naive repair made it worse before it made it right: to read the CMD
+status module from the PRJ app, host_bookclub was declared as a PRJ
+*application* dependency. That boots the CMD app's mesh emitters into the
+projection test env — an env with no mesh — and an emitter's
+`{error, mesh_unavailable}` return stalls the router's synchronous
+delivery, so the second event of a pair stopped projecting, silently,
+with green dispatches and a row that never moved. The call that was
+needed is a PURE function: a loaded module, not a booted app.
+
+### The Fix
+
+One flag map per aggregate, owned by the status module that already owns
+the flags, rendered through evoq's own conversion:
+
+```erlang
+%% bookclub_status.erl -- the .hrl keeps the macros; this module owns the names
+flag_map() ->
+    #{?BOOKCLUB_INITIATED => <<"active">>,
+      ?BOOKCLUB_ARCHIVED => <<"archived">>}.
+
+to_string(Status) ->
+    evoq_bit_flags:to_string(Status, flag_map()).
+```
+
+and each projection writes the label of the flag ITS event sets, never a
+literal of its own:
+
+```erlang
+bookclub_status:to_string(bookclub_status:initiated())
+```
+
+The mechanism that refuses a relapse, on both sides:
+- the status-module test pins each flag map as literals, so a name change
+  is a deliberate, visible act;
+- a boundary test greps the PRJ sources and refuses any QUOTED
+  readable-status literal (`'active'`, `"active"`, ...) — only the quoted
+  forms, because the bare words legitimately appear in event-type names
+  (`book_retired_v1`) and column names (`finished_at`); a status VALUE is
+  always a quoted literal. Comments count, as with the mesh-name
+  boundary tests.
+- the PRJ app reads the status module WITHOUT an application dependency:
+  the facade's boot order covers the release, and booting the CMD app
+  into a projection test env is exactly what drags the emitters in.
+
+### The Rule
+
+> **The bits and their names live in ONE module.** The aggregate's status
+> module owns a flag map and `evoq_bit_flags:to_string/2` renders it; a
+> projection that spells a readable-status literal of its own is the
+> relapse, and the grep test refuses it. Read the library's own
+> conversion API before you write the code that needs it — and when one
+> division needs another's pure functions, depend on the module, never
+> on the app.
+
+---
+
 *We burned these demons so you don't have to. Keep the fire going.* 🔥🗝️🔥
