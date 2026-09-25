@@ -427,4 +427,63 @@ fresh-subscribe probe, then the code.
 
 ---
 
+## 🔥 Demon 72: The Dev Smoke's Ghost Publisher
+
+**Date exorcised:** 2026-09-25
+**Where it appeared:** the mcl-bookclub-gleam rollout — the observer's
+scoreboard pinned its verification to a publisher that no longer existed
+**Cost:** The third club's acceptance row stuck at `bookclub_verified =>
+no` even after the real club was deployed, granted and healthy; an hour
+chasing a live node that was fine, then surgical cleanup in the
+observer's sqlite.
+
+### The Lie
+
+"A local boot against the real mesh is a harmless end-to-end check; it
+leaves no trace in production."
+
+### What Happened
+
+Pre-flight verification ran `local_boot.sh` against the REAL mesh (the
+public demo stations) — full command/query/projection pipeline, facts
+published. The observer ingested the `member_registered_v1` fact and
+pinned its verification call to the fact's publisher: the **dev
+machine's** identity-key node id. That identity died when the local boot
+ended.
+
+The real deployment later minted its own identity (the secrets volume
+key — a different node id, as it must be). The observer now held TWO rows
+for the third club: the real one (verified `yes` once driven) and the
+ghost (verified `no` forever — its pin is unreachable). The ghost's `no`
+was indistinguishable from a live failure: it presented as the rollout
+failing, and the live club was healthy all along.
+
+The cleanup held its own gotcha: the observer's read model has **no
+`clubs` table** — clubs are derived from `members` (+ books). Every
+`SELECT ... FROM clubs` and `DELETE FROM clubs` failed with esqlite's
+`{error, 1}` (SQLITE_ERROR, message dropped), which read like a broken
+connection rather than a missing table. The ghost row lives in
+`members`; delete it there.
+
+### The Fix
+
+Drive the deployed club through the real smoke (initiate + register a
+member) so the observer ingests a fact carrying the deployed node id,
+then delete the ghost's `members` row. The durable lesson: the observer's
+pin makes node identity load-bearing in both directions — a stable key is
+not just for the live club's survival, it is what the whole verification
+chain points at.
+
+### The Rule
+
+> **A smoke against the real mesh is a production write.** It publishes
+> facts under the identity of whatever runs it, and every consumer that
+> pins on the publisher will remember that identity after the smoke
+> process is dead. Run mesh smokes under the identity that will serve —
+> or budget the cleanup of the pin ghost when the real one lands. When a
+> scoreboard row verifies `no`, check the pin's publisher against the
+> live node BEFORE debugging the live node.
+
+---
+
 *13 demons exorcised in one session. Each one hiding behind the last. The lesson isn't "fix bugs faster" — it's "test the chain, not the links."*

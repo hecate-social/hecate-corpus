@@ -331,6 +331,69 @@ comparison against the outside proves they are right.
 
 ---
 
+## 🔥🔥 Demon 71: The Lint Gate That Linted Nothing
+
+**Date exorcised:** 2026-09-25
+**Where it appeared:** `macula-services/mcl-bookclub-gleam` — the elvis
+`mcl_min` gate on the Gleam sources' generated Erlang
+**Cost:** The house nesting rule was enforced nowhere while the gate was
+green; the same config flip-flopped between a silent pass (dev) and a red
+CI full of level-3 nesting; ~24 violations across 35 generated modules had
+to be refactored only after the gate was made real.
+
+### The Lie
+
+"elvis runs on the generated code and the gate is green, so the code
+respects the house nesting rule."
+
+### What Happened
+
+The Gleam twin's "source" is generated Erlang under `build/`, and
+`build/` is git-ignored — it must be, it is generated. elvis_core >= 5.0
+injects the output of `git check-ignore **/*` into **every rule group's
+ignore list** whenever it loads its config from a file. So the artefact
+glob silently resolved to **zero files** on the dev box: a green no-op.
+CI's copy of the same injection misfired differently (its
+`git check-ignore` returned nothing useful), so CI linted everything and
+failed on the test modules' generated level-3 nesting.
+
+Same config, same commit, two opposite verdicts — and both wrong. The
+gate was environment-fragile by construction, and the commits that
+claimed to "respect the house nesting rule, elvis-enforced" had never
+been linted at all.
+
+### The Fix
+
+Three parts, all worth copying:
+
+1. **Invoke elvis with an explicit in-memory config** — `rock({config,
+   RuleGroups})` — instead of letting it read `rebar.config` (or any
+   file). That code path never consults `git check-ignore`, so the gate
+   is the same machine in dev and CI: lint the generated artefacts in
+   place, no staging dirs, no `.gitignore` games.
+2. **Make "zero files" a failure.** A canary in the lint script resolves
+   each rule group first and refuses to pass on an empty file list. A
+   gate that can lint nothing will eventually lint nothing; fail loudly
+   instead.
+3. **The generated code obeys the rule, not just the source.** Gleam
+   `let assert` chains and nested `case`-in-clause bodies generate
+   case-in-case Erlang (level-3 nesting). The fix mirrors the twins'
+   `record_when` style: hoist every nested decision into a
+   one-decision-per-function helper, so the generated Erlang stays at
+   level 2.
+
+### The Rule
+
+> **A gate that can resolve zero files is not a gate — it is a permission
+> slip.** When a linter's mechanism has its own opinions about which files
+> exist (elvis's gitignore injection, globs over git-ignored build
+> output), verify what it actually saw, in BOTH environments, and make an
+> empty result a hard failure. Generated code inherits your source's
+> nesting — enforce the structural rule on it too, and hoist decisions
+> into helpers instead of chaining asserts.
+
+---
+
 ## The Session This File Came From
 
 2026-08-07, one working day, one author. Findings: an archipelago whose attack
