@@ -228,35 +228,70 @@ as historical, not a pattern to copy.
 
 ## Gleam
 
-**No precedent exists anywhere in this workspace** — no `.gleam` file, no
-mention in `macula`'s own docs. The example below is constructed from
-Gleam's own documented, stable `@external` FFI attribute for calling raw
-Erlang/OTP functions — a standard, well-established Gleam language
-feature, not macula-specific — but it has not been run against this SDK.
-Verify it before relying on it:
+The first real Gleam edge service in this workspace is
+`macula-services/mcl-bookclub-gleam` (2026-09-25): the Bookclub-on-Mesh
+twin ported to Gleam, deployed beside the Erlang and Elixir clubs. It is
+the reference to copy from — full domain (CMD/PRJ/QRY desks), the
+`mcl_om_service` contract, mesh fact emitters, a cowboy LAN admin, 91
+tests, all green. The constructed example that used to live here is
+replaced below by the binding shapes that actually work.
+
+Gleam calls the Erlang SDK directly (`@external`), exactly like Elixir —
+the "no wrapper" convention holds. The real binding layer
+(`src/mcl_bookclub_gleam/internal/`):
 
 ```gleam
-// A minimal binding to macula:connect/2 and macula:publish/4.
-// Gleam's dynamic type stands in for whatever shape the Erlang side
-// actually expects/returns until real usage proves the binding out.
-import gleam/dynamic.{type Dynamic}
+// internal/mesh.gleam -- the mesh edge, in the shape that ran in
+// production. Gleam's Result IS Erlang's {ok, V} | {error, E}.
+@external(erlang, "mcl_om", "boot")
+pub fn boot(service_module: dynamic.Dynamic) -> Result(dynamic.Dynamic, dynamic.Dynamic)
 
-@external(erlang, "macula", "connect")
-pub fn connect(seeds: List(String), opts: Dynamic) -> Result(Dynamic, Dynamic)
+@external(erlang, "macula_topic", "app_fact")
+pub fn app_fact_topic(
+  realm_name: String,
+  org: String,
+  app: String,
+  domain: String,
+  name: String,
+  version: Int,
+) -> String
 
-@external(erlang, "macula", "publish")
-pub fn publish(pool: Dynamic, realm: Dynamic, topic: String, payload: Dynamic) -> Result(Nil, Dynamic)
-
-pub fn main() {
-  let assert Ok(pool) = connect(["quic://relay-1.example.com:4433"], dynamic.from(dynamic.nil()))
-  publish(pool, dynamic.from(dynamic.nil()), "some.topic", dynamic.from("hello"))
-}
+@external(erlang, "mcl_om_wire", "field")
+pub fn field(key: dynamic.Dynamic, payload: Payload) -> dynamic.Dynamic
 ```
 
-If you're the first to actually try this, please report back what needed
-correcting — this section should stop being a construction from first
-principles the moment someone has a real, tested example to replace it
-with.
+The lessons this first build paid for, each pinned by a test or comment in
+mcl-bookclub-gleam:
+
+- **A Gleam project is ONE OTP app** (no umbrella). The many-app division
+  layout becomes screaming-architecture FOLDERS inside the package; the
+  division boundary is enforced by tests (source-scanning bans), exactly
+  as the Erlang twin does it. Boot order that the twins get from their
+  application order is done in the app's `start/2`: start the division
+  supervisors, THEN `mcl_om:boot/1` — its evoq replay must find the
+  `deliver`-policy projections registered.
+- **gleam_stdlib 1.x has no `dynamic.from/1`** — only typed constructors
+  (`dynamic.string`, `dynamic.int`, `dynamic.properties`, ...). Arbitrary
+  terms (atoms, pids, tuples) need an identity FFI helper.
+- **gleam_erlang's `charlist` module stores a BINARY.** A real charlist
+  (the twins' `data_dir/0` contract; esqlite paths) comes from
+  `binary_to_list` in an FFI module. Relatedly, `esqlite3:open/1` REJECTS
+  a binary path outright.
+- **`process.new_name/1` always appends a unique suffix** — a fixed-name
+  registration (health-pinged stores) needs the exact atom via an FFI.
+  gleam actors also receive only through their subject envelope
+  (`{Name, Message}` for named actors), never raw messages.
+- **Many Erlang APIs return a bare `ok` atom** (`filelib:ensure_dir`,
+  `macula:publish`, `reckon_gater_stream_id:validate`) or three-tuples
+  (`evoq_command_router:dispatch`). Neither shapes Gleam's `Result`; one
+  small FFI module reshapes them all.
+- **The release: rebar3's relx assembles `gleam build` output** (Gleam
+  owns compilation; `{project_app_dirs, []}` makes rebar3 skip its own).
+  The staged `.app` needs its `mod` entry patched in, and every beam
+  unioned into the modules list — `gleam_otp`/`gleam_erlang` ship beams
+  their own `.app` files omit, which is an `undef` at boot otherwise.
+
+See also: [FAQ: How do I add event sourcing to a new hecate service?](FAQ_ADD_EVENT_SOURCING.md)
 
 ## See also
 
