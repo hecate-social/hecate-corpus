@@ -936,4 +936,57 @@ for, not a matter of style.
 
 ---
 
+## 🔥🔥 Demon 70: A Domain Suite's Test VM That Boots the Mesh Side
+
+**Date exorcised:** 2026-09-25
+**Where it appeared:** `macula-services/mcl-bookclub-gleam`'s test suite —
+the Gleam twin's 91-test gates, flaking ~20% of runs with projections that
+never received their events
+**Cost:** A day of chasing a delivery race that was not in the product at
+all — every production boot and every one of the Erlang twin's eunit runs
+was green.
+
+### The Lie
+
+"The store and the evoq subscription start in the test harness exactly as
+they do in production, so delivery behaves the same."
+
+### What Happened
+
+The evoq subscription's catch-up runs asynchronously after
+`start_link/1` returns, and its `subscribe_to_all` races the store's
+**async leader election** — in `single` mode too. The reckon-db
+notification emitter for the subscription registers when the subscribe
+lands; a notification that fires before then is dropped with "No
+emitters", and the event is gone for good. The window is milliseconds.
+
+The twins' `rebar3 eunit` never lost that race: their VM boots **no
+applications** — each suite's setup starts only the division apps
+(`reckon_db, evoq, reckon_evoq, esqlite`), then the store, then the
+subscription. The Gleam twin's test runner, by contrast, did
+`application:ensure_all_started(<the whole app>)` before any test —
+pulling in `mcl_om`, `macula`, the mesh pool and the crypto NIFs. Those
+processes load the VM at the exact moment the first test's
+store/leader/subscription race runs; the window widens, and in ~1 run in
+5 the emitter registration loses, breaking delivery for the entire run.
+
+### The Fix
+
+Boot the test VM lean, exactly like the twins' eunit: no application
+pre-start; `test_support.run` starts the division apps itself
+(`application:ensure_all_started([reckon_db, evoq, reckon_evoq,
+esqlite])`), idempotently, before the store. A canary warm-up (dispatch a
+command, await its projected row, retry) proves delivery before any real
+test dispatch — cheap insurance, and it doubles as a delivery smoke test.
+
+### The Rule
+
+> **A domain suite's test VM boots only the domain's dependencies.**
+> **Starting the mesh side (or any unrelated app tree) to test a domain
+> suite is not free: it loads the machine at the one moment a
+> store-startup race is decided, and the failure it causes looks exactly
+> like a product bug.**
+
+---
+
 *We burned these demons so you don't have to. Keep the fire going.* 🔥🗝️🔥

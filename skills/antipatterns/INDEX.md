@@ -137,7 +137,7 @@ Demons #10, #23, #33, #34, #37, #40, **#41**, #49, **#51**, **#67**. Aggregate c
 
 ### [antipatterns/projections.md](projections.md) — Projections & Read Models
 
-Demons #12, #22, #31, #32, **#68**. Projection timing, manual event emission, inline projections, PRJ/QRY separation, and **the flag→name map that exists nowhere: status bits in the CMD status module, readable names as literals scattered across the projections, evoq_bit_flags:to_string/2 + a flag map as the unread bridge — and the trap where "depending on the CMD app" (not just its pure modules) boots mesh emitters into a projection test env and silently stalls $all delivery**.
+Demons #12, #22, #31, #32, **#68**, **#70**. Projection timing, manual event emission, inline projections, PRJ/QRY separation, and **the flag→name map that exists nowhere: status bits in the CMD status module, readable names as literals scattered across the projections, evoq_bit_flags:to_string/2 + a flag map as the unread bridge — and the trap where "depending on the CMD app" (not just its pure modules) boots mesh emitters into a projection test env and silently stalls $all delivery**.
 
 ### [antipatterns/integration.md](integration.md) — Subscriptions, Messaging, Process Managers
 
